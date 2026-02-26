@@ -1,11 +1,16 @@
-import './App.css';
-import DoctorRegistrationForm from './Components/RegistrationPages/DoctorRegistrationForm'
-
+import NurseRegistrationForm from "./Components/Registration/NurseRegistrationForm";
+import "./Components/Registration/NurseForm.css";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 function App() {
   return (
-    <div className="App">
-      <DoctorRegistrationForm/>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/register" element={<NurseRegistrationForm />} />
+      </Routes>
+    </BrowserRouter>
+    // <div className="App">
+    //   <NurseRegistrationForm />
+    // </div>
   );
 }
 
