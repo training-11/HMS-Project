@@ -1,0 +1,131 @@
+/* Remove default spacing */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  font-family: Arial, sans-serif;
+}
+
+/* Full screen background */
+.about-container {
+  width: 100%;
+  min-height: 100vh;
+  background-image: url("https://images.unsplash.com/photo-1586773860418-d37222d8fce3");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Overlay */
+.overlay {
+  width: 100%;
+  min-height: 100vh;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+/* Centered Content */
+.content-wrapper {
+  width: 100%;
+  max-width: 1200px;
+  text-align: center;
+  color: white;
+}
+
+/* Heading */
+.main-heading {
+  font-size: 42px;
+  margin-bottom: 20px;
+}
+
+/* About Text */
+.about-text {
+  font-size: 18px;
+  line-height: 1.6;
+  margin-bottom: 50px;
+}
+
+/* Vision & Mission */
+.vm-container {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+  margin-bottom: 60px;
+}
+
+.vm-card {
+  background: white;
+  color: black;
+  width: 320px;
+  padding: 30px;
+  border-radius: 12px;
+  transition: 0.3s;
+}
+
+.vm-card:hover {
+  transform: translateY(-8px);
+}
+
+.vm-card h3 {
+  margin-bottom: 15px;
+}
+
+/* Doctors */
+.doctor-heading {
+  font-size: 32px;
+  margin-bottom: 30px;
+}
+
+.doctor-grid {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.doctor-card {
+  background: white;
+  color: black;
+  width: 250px;
+  padding: 20px;
+  border-radius: 12px;
+  transition: 0.3s;
+}
+
+.doctor-card:hover {
+  transform: scale(1.05);
+}
+
+.doctor-card img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+
+.doctor-card span {
+  font-size: 14px;
+  color: gray;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .main-heading {
+    font-size: 28px;
+  }
+
+  .vm-card,
+  .doctor-card {
+    width: 90%;
+  }
+}
