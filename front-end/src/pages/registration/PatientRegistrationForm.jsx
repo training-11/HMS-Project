@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "./PatientRegistrationForm.css";
+import "../../Components/styles/PatientRegistrationForm.css";
 
 const PatientRegistrationForm = () => {
   const [formData, setFormData] = useState({
@@ -28,7 +28,6 @@ const PatientRegistrationForm = () => {
         <h2>Patient Registration</h2>
 
         <form onSubmit={handleSubmit}>
-          
           <label>Full Name</label>
           <input
             type="text"
@@ -54,11 +53,7 @@ const PatientRegistrationForm = () => {
           />
 
           <label>Date of Birth</label>
-          <input
-            type="date"
-            name="dob"
-            onChange={handleChange}
-          />
+          <input type="date" name="dob" onChange={handleChange} />
 
           <label>Blood Group</label>
           <select name="bloodGroup" onChange={handleChange}>
@@ -89,7 +84,6 @@ const PatientRegistrationForm = () => {
           />
 
           <button type="submit">Register</button>
-
         </form>
       </div>
     </div>

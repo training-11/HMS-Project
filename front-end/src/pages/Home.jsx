@@ -1,6 +1,6 @@
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import bgImage from "../assets/hospital-bg.jpg";   
+import Navbar from "../Components/Navbar";
+import Footer from "../Components/Footer";
+import bgImage from "../assets/hospital-bg.jpg";
 
 function Home() {
   return (
@@ -10,7 +10,7 @@ function Home() {
       <section
         style={{
           ...styles.hero,
-          backgroundImage: `url(${bgImage})`   
+          backgroundImage: `url(${bgImage})`,
         }}
       >
         <h1>Welcome to CityCare Hospital - Your Health, Our Priority</h1>
@@ -44,14 +44,14 @@ const styles = {
   hero: {
     textAlign: "center",
     padding: "80px 20px",
-    height: "80vh",                 
-    backgroundSize: "cover",        
-    backgroundPosition: "center",   
+    height: "80vh",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
-    color: "white"
+    color: "white",
   },
   btn: {
     padding: "10px 20px",
@@ -59,23 +59,23 @@ const styles = {
     background: "#023e8a",
     color: "white",
     border: "none",
-    cursor: "pointer"
+    cursor: "pointer",
   },
   cards: {
     display: "flex",
     justifyContent: "space-around",
-    padding: "40px"
+    padding: "40px",
   },
   card: {
     padding: "20px",
     border: "1px solid #ddd",
     width: "200px",
-    textAlign: "center"
+    textAlign: "center",
   },
   about: {
     textAlign: "center",
-    padding: "40px"
-  }
+    padding: "40px",
+  },
 };
 
 export default Home;

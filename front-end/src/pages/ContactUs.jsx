@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import "../../App.css";
+//import "../Components/styles/ContactUs.css";
+import "../Components/styles/ContactAccess.css";
 
 function ContactUs() {
   const [activeSection, setActiveSection] = useState(null);
@@ -14,10 +15,12 @@ function ContactUs() {
     time: "",
   });
 
- 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target)
+      ) {
         setActiveSection(null);
       }
     };
@@ -51,14 +54,13 @@ function ContactUs() {
   return (
     <div className="contact-page">
       <div className="header">
-       <h1 className="main-title">
-  <span className="hospital-name">CITY CARE HOSPITAL</span>
-  <br />
-  <span className="contact-text">CONTACTUS</span>
-</h1>
+        <h1 className="main-title">
+          <span className="hospital-name">CITY CARE HOSPITAL</span>
+          <br />
+          <span className="contact-text">CONTACTUS</span>
+        </h1>
       </div>
 
- 
       <div ref={containerRef}>
         <div className="info-section">
           <div
@@ -74,14 +76,12 @@ function ContactUs() {
             className={`info-box ${activeSection === "departments" ? "active" : ""}`}
             onClick={() =>
               setActiveSection(
-                activeSection === "departments" ? null : "departments"
+                activeSection === "departments" ? null : "departments",
               )
             }
           >
             <h3>🩺 DEPARTMENTS</h3>
           </div>
-
-          
 
           <div
             className={`info-box ${activeSection === "contact" ? "active" : ""}`}
@@ -93,7 +93,6 @@ function ContactUs() {
           </div>
         </div>
 
-      
         {activeSection && (
           <div className="details-section">
             <div className="details-card">
@@ -121,8 +120,6 @@ function ContactUs() {
                 </>
               )}
 
-              
-
               {activeSection === "contact" && (
                 <>
                   <h3>Contact Info</h3>
@@ -135,7 +132,6 @@ function ContactUs() {
         )}
       </div>
 
-    
       <div className="booking-section">
         <h2> BOOK YOUR SLOT</h2>
 

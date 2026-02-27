@@ -1,7 +1,6 @@
 import React from "react";
 
 const PatientList = ({ patients, setPatients }) => {
-
   const handleDelete = (index) => {
     const updated = patients.filter((_, i) => i !== index);
     setPatients(updated);

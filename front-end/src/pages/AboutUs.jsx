@@ -1,5 +1,5 @@
 import React from "react";
-import "./AboutUs.css";
+import "../Components/styles/AboutUs.css";
 
 const doctors = [
   {
@@ -23,7 +23,7 @@ const doctors = [
     experience: "10 Years Experience",
     image: "https://randomuser.me/api/portraits/men/75.jpg",
   },
-   {
+  {
     id: 4,
     name: "Dr. Vijay ",
     specialization: "Pediatric ",
@@ -37,21 +37,21 @@ const doctors = [
     experience: "10 Years Experience",
     image: "https://randomuser.me/api/portraits/women/70.jpg",
   },
-    {
+  {
     id: 6,
     name: "Dr. Dhanush",
     specialization: "Dentist",
     experience: "10 Years Experience",
     image: "https://randomuser.me/api/portraits/men/45.jpg",
   },
-    {
+  {
     id: 7,
     name: "Dr. Sudheer",
     specialization: "General Surgeon",
     experience: "10 Years Experience",
     image: "https://randomuser.me/api/portraits/men/83.jpg",
   },
-    {
+  {
     id: 8,
     name: "Dr. Samantha",
     specialization: "General Surgeon",
@@ -64,16 +64,14 @@ function AboutUs() {
   return (
     <div className="about-container">
       <div className="overlay">
-
         <div className="content-wrapper">
-
           <h1 className="main-heading">About CityCare Hospital</h1>
 
           <p className="about-text">
-            CityCare Hospital is a leading healthcare provider offering
-            advanced medical facilities and compassionate care. We combine
-            modern technology with experienced professionals to ensure
-            the best treatment for our patients.
+            CityCare Hospital is a leading healthcare provider offering advanced
+            medical facilities and compassionate care. We combine modern
+            technology with experienced professionals to ensure the best
+            treatment for our patients.
           </p>
 
           {/* Vision & Mission */}
@@ -81,8 +79,8 @@ function AboutUs() {
             <div className="vm-card">
               <h3>Our Vision</h3>
               <p>
-                To become the most trusted healthcare institution by
-                delivering innovative and patient-centered services.
+                To become the most trusted healthcare institution by delivering
+                innovative and patient-centered services.
               </p>
             </div>
 
@@ -108,7 +106,6 @@ function AboutUs() {
               </div>
             ))}
           </div>
-
         </div>
       </div>
     </div>

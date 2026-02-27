@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import "./NurseForm.css";
+
+import "../../Components/styles/NurseForm.css";
 
 function NurseRegistrationForm() {
   const initialState = {
