@@ -1,0 +1,93 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f9fc;
+  margin: 0;
+}
+.main-title {
+  font-size: 28px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.hospital-name {
+  color: #0077b6;   /* Blue */
+}
+
+.contact-text {
+  color: #e63946;   /* Red */
+  font-size: 22px;
+}
+
+.header {
+  text-align: center;
+  padding: 20px;
+}
+
+.info-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.info-box {
+  background:yellowgreen;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  transition: 0.3s;
+}
+
+.info-box:hover {
+  background: #e6f7ff;
+}
+
+.info-box.active {
+  background: #0077b6;
+  color: white;
+}
+
+.details-section {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.details-card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.booking-section {
+  padding: 20px;
+  text-align: center;
+}
+
+.booking-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 400px;
+  margin: auto;
+}
+
+.booking-form input,
+.booking-form select,
+.booking-form button {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.booking-form button {
+  background: #0077b6;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
