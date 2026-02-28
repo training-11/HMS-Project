@@ -34,12 +34,8 @@ const patientSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("patient", patientSchema);
 
-// fullName: "",
-//     email: "",
-//     phone: "",
-//     dob: "",
-//     bloodGroup: "",
-//     medicalHistory: "",
-//     password: "",
+module.exports =
+  mongoose.models.Patient ||
+  mongoose.model("Patient", patientSchema);
+

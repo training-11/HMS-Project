@@ -1,8 +1,10 @@
 import React, { useState } from "react";
-
+import { useNavigate } from "react-router-dom";
 import "../../Components/styles/NurseForm.css";
 
 function NurseRegistrationForm() {
+  const navigate = useNavigate();
+
   const initialState = {
     fullName: "",
     email: "",
@@ -14,14 +16,13 @@ function NurseRegistrationForm() {
 
   const [formData, setFormData] = useState(initialState);
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState("");
 
   const changeFunction = (e) => {
     const { name, value } = e.target;
-
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData({ ...formData, [name]: value });
+    setServerError("");
   };
 
   const validateForm = () => {
@@ -30,53 +31,72 @@ function NurseRegistrationForm() {
     if (!formData.fullName.trim()) {
       newErrors.fullName = "Full Name is required";
     }
-
     if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
       newErrors.email = "Enter valid email address";
     }
-
     if (!/^[0-9]{10}$/.test(formData.phone)) {
       newErrors.phone = "Phone must be 10 digits";
     }
-
     if (!formData.department) {
       newErrors.department = "Select department";
     }
-
     if (!formData.shiftTiming) {
       newErrors.shiftTiming = "Select shift timing";
     }
-
     if (formData.password.length < 6) {
       newErrors.password = "Password must be at least 6 characters";
     }
 
     setErrors(newErrors);
-
     return Object.keys(newErrors).length === 0;
   };
 
-  const formSubmit = (e) => {
+  const formSubmit = async (e) => {
     e.preventDefault();
-
     if (!validateForm()) return;
 
     const confirmRegister = window.confirm(
-      "You are registering as a Nurse. Are you sure?",
+      "You are registering as a Nurse. Are you sure?"
     );
+    if (!confirmRegister) return;
 
-    if (confirmRegister) {
-      console.log("Nurse Registration Data:", formData);
-      alert("Nurse Registered Successfully!");
+    setLoading(true);
+    setServerError("");
 
-      setFormData(initialState);
-      setErrors({});
+    try {
+      const res = await fetch("http://localhost:8080/api/postNurse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setServerError(data.message || "Registration failed. Please try again.");
+      } else {
+        setFormData(initialState);
+        setErrors({});
+        navigate("/login");
+      }
+    } catch (err) {
+      setServerError("Could not connect to server. Please check your connection.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="nurse-form-container">
       <h2>Nurse Registration</h2>
+
+      {serverError && (
+        <div style={{
+          background: "#ffebee", border: "1px solid #ef9a9a", color: "#c62828",
+          borderRadius: "8px", padding: "10px 14px", fontSize: "14px", marginBottom: "14px"
+        }}>
+          ⚠ {serverError}
+        </div>
+      )}
 
       <form onSubmit={formSubmit} className="nurse-form">
         <div className="form-group">
@@ -117,11 +137,7 @@ function NurseRegistrationForm() {
 
         <div className="form-group">
           <label>Department</label>
-          <select
-            name="department"
-            value={formData.department}
-            onChange={changeFunction}
-          >
+          <select name="department" value={formData.department} onChange={changeFunction}>
             <option value="">Select Department</option>
             <option value="ICU">ICU</option>
             <option value="Emergency">Emergency</option>
@@ -133,11 +149,7 @@ function NurseRegistrationForm() {
 
         <div className="form-group">
           <label>Shift Timing</label>
-          <select
-            name="shiftTiming"
-            value={formData.shiftTiming}
-            onChange={changeFunction}
-          >
+          <select name="shiftTiming" value={formData.shiftTiming} onChange={changeFunction}>
             <option value="">Select Shift</option>
             <option value="Morning (8AM - 4PM)">Morning (8AM - 4PM)</option>
             <option value="Evening (4PM - 12AM)">Evening (4PM - 12AM)</option>
@@ -158,9 +170,20 @@ function NurseRegistrationForm() {
           <small className="error">{errors.password}</small>
         </div>
 
-        <button type="submit" className="register-btn">
-          Register
+        <button type="submit" className="register-btn" disabled={loading}>
+          {loading ? "Registering..." : "Register"}
         </button>
+
+        {/* Login link */}
+        <p style={{ textAlign: "center", marginTop: "14px", fontSize: "14px", color: "#666" }}>
+          Already have an account?{" "}
+          <span
+            onClick={() => navigate("/login")}
+            style={{ color: "#7b1fa2", fontWeight: "600", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: "2px" }}
+          >
+            Login
+          </span>
+        </p>
       </form>
     </div>
   );

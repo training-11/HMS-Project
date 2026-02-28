@@ -67,7 +67,7 @@ exports.postDoc = async (req, res) => {
       });
     }
 
-    // ✅ Hash password
+    
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newDoc = new Doctor({
@@ -91,9 +91,4 @@ exports.postDoc = async (req, res) => {
     });
   }
 };
-// fullName: "",
-//     email: "",
-//     phone: "",
-//     specialty: "",
-//     department: "",
-//     password: "",
+

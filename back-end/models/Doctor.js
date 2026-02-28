@@ -31,9 +31,4 @@ const doctorSchema = new mongoose.Schema({
 });
 module.exports = mongoose.model("doctor", doctorSchema);
 
-// fullName: "",
-//     email: "",
-//     phone: "",
-//     specialty: "",
-//     department: "",
-//     password: "",
+

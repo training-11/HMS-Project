@@ -1,4 +1,4 @@
-const Patient = require("../models/Patient");
+const Patient = require('../models/Patient');
 const bcrypt = require("bcryptjs");
 
 exports.registerPatient = async (req, res) => {
@@ -39,7 +39,7 @@ exports.registerPatient = async (req, res) => {
 
     res.status(201).json({
       message: "Patient registered successfully",
-      nurse,
+      patient,
     });
   } catch (err) {
     res.status(500).json({
@@ -56,10 +56,3 @@ exports.getPatients = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-// fullName: "",
-//     email: "",
-//     phone: "",
-//     dob: "",
-//     bloodGroup: "",
-//     medicalHistory: "",
-//     password: "",

@@ -1,9 +1,10 @@
 import React, { useRef, useState } from "react";
-import DoctorRegistrationForm from "./registration/DoctorRegistrationForm";
-import NurseRegistrationForm from "./registration/NurseRegistrationForm";
-import PatientRegistrationForm from "./registration/PatientRegistrationForm";
+// import DoctorRegistrationForm from "./registration/DoctorRegistrationForm";
+// import NurseRegistrationForm from "./registration/NurseRegistrationForm";
+// import PatientRegistrationForm from "./registration/PatientRegistrationForm";
 import AboutUs from "./AboutUs";
 import ContactUs from "./ContactUs";
+import Footer from "../Components/Footer";
 
 
 import logo from "../assets/hospital-logo.png";
@@ -53,14 +54,14 @@ function Home() {
         </div>
 
         <div style={{ display: "flex", gap: "20px" }}>
-          <span style={{ cursor: "pointer" }} onClick={() => scrollToRef(homeRef)}>Home</span>
-          <span style={{ cursor: "pointer" }} onClick={() => scrollToRef(aboutRef)}>About Us</span>
-          <span style={{ cursor: "pointer" }} onClick={() => scrollToRef(contactRef)}>Contact Us</span>
+          <span style={{ cursor: "pointer" }} onClick={() =>  window.location.href = "/"}>Home</span>
+          <span style={{ cursor: "pointer" }} onClick={() =>  window.location.href = "/aboutUs"}>About Us</span>
+          <span style={{ cursor: "pointer" }} onClick={() =>  window.location.href = "/ContactUs"}>Contact Us</span>
         </div>
 
         <div style={{ display: "flex", gap: "20px" }}>
           <span style={{ cursor: "pointer" }} onClick={() => setShowModal(true)}>Register</span>
-          <span style={{ cursor: "pointer" }}>Login</span>
+          <span style={{ cursor: "pointer" }} onClick={() => window.location.href = "/login"}>Login</span>
         </div>
       </nav>
 
@@ -96,17 +97,20 @@ function Home() {
       </section>
 
       {/* Registration Forms */}
-      <section ref={doctorRef}><DoctorRegistrationForm /></section>
+      {/* <section ref={doctorRef}><DoctorRegistrationForm /></section>
       <section ref={nurseRef}><NurseRegistrationForm /></section>
       <section ref={patientRef}><PatientRegistrationForm /></section>
-      <section ref={adminRef}>
+      <section ref={adminRef}> */}
         {/* You can add AdminRegistrationForm here later */}
-        <div style={{ padding: "50px", textAlign: "center", fontSize: "1.2rem", color: "#0077b6" }}>
+        {/* <div style={{ padding: "50px", textAlign: "center", fontSize: "1.2rem", color: "#0077b6" }}>
           Admin Registration Form will be here
         </div>
-      </section>
+      </section> */}
 
       {/* Registration Modal */}
+
+      <Footer/>
+      
       {showModal && (
         <>
           <div
@@ -165,25 +169,25 @@ function Home() {
             >
               <button
                 style={modalBtnStyle}
-                onClick={() => { scrollToRef(doctorRef); setShowModal(false); }}
+                onClick={() => {  window.location.href = "/doctor-register"; setShowModal(false); }}
               >
                 Doctor
               </button>
               <button
                 style={modalBtnStyle}
-                onClick={() => { scrollToRef(nurseRef); setShowModal(false); }}
+                onClick={() => {  window.location.href = "/nurse-register"; setShowModal(false); }}
               >
                 Nurse
               </button>
               <button
                 style={modalBtnStyle}
-                onClick={() => { scrollToRef(patientRef); setShowModal(false); }}
+                onClick={() => {  window.location.href = "/patient-register"; setShowModal(false); }}
               >
                 Patient
               </button>
               <button
                 style={modalBtnStyle}
-                onClick={() => { scrollToRef(adminRef); setShowModal(false); }}
+                onClick={() => {  window.location.href = ""; setShowModal(false); }}
               >
                 Admin
               </button>

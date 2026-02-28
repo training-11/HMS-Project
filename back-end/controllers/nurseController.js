@@ -6,7 +6,7 @@ exports.registerNurse = async (req, res) => {
     const { fullName, email, phone, shiftTiming, department, password } =
       req.body;
 
-    // Check if doctor already exists
+    // Check if nurse already exists
     const existingNurse = await Nurse.findOne({ email });
     if (existingNurse) {
       return res.status(400).json({
