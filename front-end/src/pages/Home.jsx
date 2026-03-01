@@ -55,8 +55,8 @@ function Home() {
 
         <div style={{ display: "flex", gap: "20px" }}>
           <span style={{ cursor: "pointer" }} onClick={() =>  window.location.href = "/"}>Home</span>
-          <span style={{ cursor: "pointer" }} onClick={() =>  window.location.href = "/aboutUs"}>About Us</span>
-          <span style={{ cursor: "pointer" }} onClick={() =>  window.location.href = "/ContactUs"}>Contact Us</span>
+          <span style={{ cursor: "pointer" }} onClick={() => scrollToRef(aboutRef)}>About Us</span>
+          <span style={{ cursor: "pointer" }} onClick={() => scrollToRef(contactRef)}>Contact Us</span>
         </div>
 
         <div style={{ display: "flex", gap: "20px" }}>
