@@ -137,14 +137,17 @@ const Navbar = ({
                 gap: "10px",
               }}
             >
-              <button onClick={() => navigate("/doctor-register")}>
+              <button  style={modalBtnStyle} onClick={() => navigate("/doctor-register")}>
                 Doctor
               </button>
-              <button onClick={() => navigate("/nurse-register")}>
+              <button style={modalBtnStyle}  onClick={() => navigate("/nurse-register")}>
                 Nurse
               </button>
-              <button onClick={() => navigate("/patient-register")}>
+              <button style={modalBtnStyle}  onClick={() => navigate("/patient-register")}>
                 Patient
+              </button>
+              <button style={modalBtnStyle}  onClick={() => navigate("/Admin-register")}>
+                Admin
               </button>
             </div>
           </div>
@@ -153,5 +156,12 @@ const Navbar = ({
     </>
   );
 };
-
+const modalBtnStyle = {
+  padding: "10px",
+  cursor: "pointer",
+  background: "#023e8a",
+  color: "white",
+  border: "none",
+  borderRadius: "4px",
+};
 export default Navbar;
