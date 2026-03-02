@@ -325,6 +325,19 @@ const Login = () => {
       <div className="login-bg">
         <div className="login-card">
 
+           {/* Back Button */}
+    <div
+      onClick={() => navigate("/")}
+      style={{
+        color: "#1976d2",
+        fontWeight: "600",
+        cursor: "pointer",
+        marginBottom: "10px"
+      }}
+    >
+      ← Back
+    </div>
+
           {/* Hospital branding */}
           <div className="hospital-logo">
             <div className="hospital-logo-icon">
