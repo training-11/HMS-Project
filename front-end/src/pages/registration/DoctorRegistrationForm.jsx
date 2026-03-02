@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Navbar from "../../Components/Navbar";
 
 const DoctorRegistrationForm = () => {
   const navigate = useNavigate();
@@ -67,6 +68,7 @@ const DoctorRegistrationForm = () => {
 
   return (
     <>
+  <Navbar />
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
       <style>{`
         .hc-bg {

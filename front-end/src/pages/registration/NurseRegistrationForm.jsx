@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../Components/styles/NurseForm.css";
+import Navbar from "../../Components/Navbar";
 
 function NurseRegistrationForm() {
   const navigate = useNavigate();
@@ -86,6 +87,8 @@ function NurseRegistrationForm() {
   };
 
   return (
+    <>
+    <Navbar />
     <div className="nurse-form-container">
       <h2>Nurse Registration</h2>
 
@@ -186,6 +189,7 @@ function NurseRegistrationForm() {
         </p>
       </form>
     </div>
+    </>
   );
 }
 

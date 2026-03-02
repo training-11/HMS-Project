@@ -1,4 +1,5 @@
 import React from "react";
+import Navbar from "../../Components/Navbar";
 
 const PatientList = ({ patients, setPatients }) => {
   const handleDelete = (index) => {
@@ -8,6 +9,8 @@ const PatientList = ({ patients, setPatients }) => {
   };
 
   return (
+    <>
+     <Navbar />
     <div style={{ width: "600px", margin: "30px auto" }}>
       <h2>Registered Patients</h2>
 
@@ -40,6 +43,7 @@ const PatientList = ({ patients, setPatients }) => {
         </table>
       )}
     </div>
+    </>
   );
 };
 

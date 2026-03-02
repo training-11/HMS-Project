@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../Components/styles/PatientRegistrationForm.css";
+import Navbar from "../../Components/Navbar";
 
 const PatientRegistrationForm = () => {
   const navigate = useNavigate();
@@ -57,6 +58,8 @@ const PatientRegistrationForm = () => {
   };
 
   return (
+    <>
+     <Navbar />
     <div className="container">
       <div className="form-box">
         <h2>Patient Registration</h2>
@@ -167,6 +170,7 @@ const PatientRegistrationForm = () => {
         </form>
       </div>
     </div>
+    </>
   );
 };
 
