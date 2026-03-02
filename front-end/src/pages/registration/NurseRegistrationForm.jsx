@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../../Components/styles/NurseForm.css";
 import Navbar from "../../Components/Navbar";
 
 function NurseRegistrationForm() {
+
   const navigate = useNavigate();
 
   const initialState = {
@@ -54,6 +54,7 @@ function NurseRegistrationForm() {
 
   const formSubmit = async (e) => {
     e.preventDefault();
+
     if (!validateForm()) return;
 
     const confirmRegister = window.confirm(
@@ -70,127 +71,222 @@ function NurseRegistrationForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
+
       const data = await res.json();
 
       if (!res.ok) {
-        setServerError(data.message || "Registration failed. Please try again.");
+        setServerError(data.message || "Registration failed");
       } else {
         setFormData(initialState);
         setErrors({});
         navigate("/login");
       }
+
     } catch (err) {
-      setServerError("Could not connect to server. Please check your connection.");
-    } finally {
-      setLoading(false);
+      setServerError("Server connection failed");
     }
+
+    setLoading(false);
   };
 
   return (
     <>
-    <Navbar />
-    <div className="nurse-form-container">
-      <h2>Nurse Registration</h2>
+     <Navbar />
 
-      {serverError && (
-        <div style={{
-          background: "#ffebee", border: "1px solid #ef9a9a", color: "#c62828",
-          borderRadius: "8px", padding: "10px 14px", fontSize: "14px", marginBottom: "14px"
-        }}>
-          ⚠ {serverError}
-        </div>
-      )}
+    <div style={containerStyle}>
 
-      <form onSubmit={formSubmit} className="nurse-form">
-        <div className="form-group">
+      <div style={formBox}>
+
+        {/* BACK BUTTON */}
+        <button
+          onClick={()=>navigate("/")}
+          style={backBtn}
+        >
+          ← Back
+        </button>
+
+        <h2 style={titleStyle}>Nurse Registration</h2>
+
+        {serverError && (
+          <div style={errorBox}>
+            ⚠ {serverError}
+          </div>
+        )}
+
+        <form onSubmit={formSubmit}>
+
           <label>Full Name</label>
           <input
+            style={inputStyle}
             type="text"
             name="fullName"
             value={formData.fullName}
             onChange={changeFunction}
             placeholder="Enter Full Name"
           />
-          <small className="error">{errors.fullName}</small>
-        </div>
+          <small style={errorText}>{errors.fullName}</small>
 
-        <div className="form-group">
+
           <label>Email Address</label>
           <input
+            style={inputStyle}
             type="email"
             name="email"
             value={formData.email}
             onChange={changeFunction}
             placeholder="Enter Email"
           />
-          <small className="error">{errors.email}</small>
-        </div>
+          <small style={errorText}>{errors.email}</small>
 
-        <div className="form-group">
+
           <label>Phone Number</label>
           <input
+            style={inputStyle}
             type="tel"
             name="phone"
             value={formData.phone}
             onChange={changeFunction}
-            placeholder="Enter 10-digit Phone Number"
+            placeholder="Enter Phone"
           />
-          <small className="error">{errors.phone}</small>
-        </div>
+          <small style={errorText}>{errors.phone}</small>
 
-        <div className="form-group">
+
           <label>Department</label>
-          <select name="department" value={formData.department} onChange={changeFunction}>
+          <select
+            style={inputStyle}
+            name="department"
+            value={formData.department}
+            onChange={changeFunction}
+          >
             <option value="">Select Department</option>
             <option value="ICU">ICU</option>
             <option value="Emergency">Emergency</option>
             <option value="General Ward">General Ward</option>
             <option value="Pediatrics">Pediatrics</option>
           </select>
-          <small className="error">{errors.department}</small>
-        </div>
+          <small style={errorText}>{errors.department}</small>
 
-        <div className="form-group">
+
           <label>Shift Timing</label>
-          <select name="shiftTiming" value={formData.shiftTiming} onChange={changeFunction}>
+          <select
+            style={inputStyle}
+            name="shiftTiming"
+            value={formData.shiftTiming}
+            onChange={changeFunction}
+          >
             <option value="">Select Shift</option>
-            <option value="Morning (8AM - 4PM)">Morning (8AM - 4PM)</option>
-            <option value="Evening (4PM - 12AM)">Evening (4PM - 12AM)</option>
-            <option value="Night (12AM - 8AM)">Night (12AM - 8AM)</option>
+            <option>Morning (8AM - 4PM)</option>
+            <option>Evening (4PM - 12AM)</option>
+            <option>Night (12AM - 8AM)</option>
           </select>
-          <small className="error">{errors.shiftTiming}</small>
-        </div>
+          <small style={errorText}>{errors.shiftTiming}</small>
 
-        <div className="form-group">
+
           <label>Password</label>
           <input
+            style={inputStyle}
             type="password"
             name="password"
             value={formData.password}
             onChange={changeFunction}
-            placeholder="Create Strong Password"
+            placeholder="Password"
           />
-          <small className="error">{errors.password}</small>
-        </div>
+          <small style={errorText}>{errors.password}</small>
 
-        <button type="submit" className="register-btn" disabled={loading}>
-          {loading ? "Registering..." : "Register"}
-        </button>
 
-        {/* Login link */}
-        <p style={{ textAlign: "center", marginTop: "14px", fontSize: "14px", color: "#666" }}>
-          Already have an account?{" "}
-          <span
-            onClick={() => navigate("/login")}
-            style={{ color: "#7b1fa2", fontWeight: "600", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: "2px" }}
-          >
-            Login
-          </span>
-        </p>
-      </form>
+          <button style={registerBtn} type="submit" disabled={loading}>
+            {loading ? "Registering..." : "Register"}
+          </button>
+
+
+          <p style={{textAlign:"center",marginTop:"10px"}}>
+            Already have account?
+            <span
+            onClick={()=>navigate("/login")}
+            style={{
+              color:"#0077b6",
+              cursor:"pointer",
+              marginLeft:"5px"
+            }}>
+              Login
+            </span>
+          </p>
+
+        </form>
+
+      </div>
+
     </div>
     </>
+  
   );
 }
+
+
+/* STYLES */
+
+const containerStyle = {
+  display:"flex",
+  justifyContent:"center",
+  alignItems:"center",
+  height:"100vh",
+  background:"#f5f7fa"
+};
+
+const formBox = {
+  width:"420px",
+  padding:"30px",
+  background:"white",
+  borderRadius:"10px",
+  boxShadow:"0px 0px 10px rgba(0,0,0,0.1)"
+};
+
+const titleStyle = {
+  textAlign:"center",
+  color:"#0077b6",
+  marginBottom:"20px"
+};
+
+const inputStyle = {
+  width:"100%",
+  padding:"10px",
+  marginBottom:"8px",
+  borderRadius:"6px",
+  border:"1px solid #ccc"
+};
+
+const registerBtn = {
+  width:"100%",
+  padding:"10px",
+  background:"#0077b6",
+  color:"white",
+  border:"none",
+  borderRadius:"6px",
+  cursor:"pointer",
+  marginTop:"10px"
+};
+
+const backBtn = {
+  border:"none",
+  background:"transparent",
+  color:"#0077b6",
+  fontSize:"15px",
+  cursor:"pointer",
+  marginBottom:"10px",
+  fontWeight:"600"
+};
+
+const errorBox = {
+  background:"#ffebee",
+  padding:"10px",
+  borderRadius:"6px",
+  marginBottom:"10px",
+  color:"#c62828"
+};
+
+const errorText = {
+  color:"red",
+  fontSize:"12px"
+};
 
 export default NurseRegistrationForm;
