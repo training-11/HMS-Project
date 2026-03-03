@@ -9,7 +9,7 @@ const doctorSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
-    unique: true, // important
+    unique: true,
     lowercase: true,
   },
   phone: {
@@ -28,7 +28,15 @@ const doctorSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  photo: { filename: String, path: "uploads/photos" },
+
+  documents: [
+    {
+      data: Buffer,
+      contentType: String,
+      filename: String,
+    },
+  ],
 });
+
 module.exports = mongoose.model("doctor", doctorSchema);
-
-
