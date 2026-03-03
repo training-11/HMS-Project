@@ -28,7 +28,7 @@ const doctorSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  photo: { filename: String, path: "uploads/photos" },
+  photo: { filename: String, path: String },
 
   documents: [
     {
