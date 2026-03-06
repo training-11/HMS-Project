@@ -28,5 +28,14 @@ const nurseSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  photo: { filename: String, path: String },
+
+  documents: [
+    {
+      data: Buffer,
+      contentType: String,
+      filename: String,
+    },
+  ],
 });
 module.exports = mongoose.model("Nurse", nurseSchema);

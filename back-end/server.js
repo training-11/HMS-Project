@@ -4,11 +4,9 @@
 // const mongoose = require("mongoose");
 // const cors = require("cors");
 
-
 // const app = express();
 
 // app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
 
 // app.use(cors({
 //   origin: "http://localhost:3000",  // ← your React app URL
@@ -35,19 +33,20 @@
 //   console.log("Server Running");
 // });
 
-
-const express  = require("express");
+const express = require("express");
 const mongoose = require("mongoose");
-const cors     = require("cors");
-const path     = require("path");
+const cors = require("cors");
+const path = require("path");
 
 const app = express();
 
-app.use(cors({
-  origin: "http://localhost:3000",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  }),
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

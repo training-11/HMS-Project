@@ -28,7 +28,7 @@ const PatientRegistrationForm = () => {
     e.preventDefault();
 
     const confirmRegister = window.confirm(
-      "You are registering as a Patient. Are you sure?"
+      "You are registering as a Patient. Are you sure?",
     );
     if (!confirmRegister) return;
 
@@ -44,13 +44,17 @@ const PatientRegistrationForm = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        setServerError(data.message || "Registration failed. Please try again.");
+        setServerError(
+          data.message || "Registration failed. Please try again.",
+        );
       } else {
         setFormData(initialState);
         navigate("/login");
       }
     } catch (err) {
-      setServerError("Could not connect to server. Please check your connection.");
+      setServerError(
+        "Could not connect to server. Please check your connection.",
+      );
     } finally {
       setLoading(false);
     }
@@ -62,10 +66,17 @@ const PatientRegistrationForm = () => {
         <h2>Patient Registration</h2>
 
         {serverError && (
-          <div style={{
-            background: "#ffebee", border: "1px solid #ef9a9a", color: "#c62828",
-            borderRadius: "8px", padding: "10px 14px", fontSize: "14px", marginBottom: "14px"
-          }}>
+          <div
+            style={{
+              background: "#ffebee",
+              border: "1px solid #ef9a9a",
+              color: "#c62828",
+              borderRadius: "8px",
+              padding: "10px 14px",
+              fontSize: "14px",
+              marginBottom: "14px",
+            }}
+          >
             ⚠ {serverError}
           </div>
         )}
@@ -152,13 +163,23 @@ const PatientRegistrationForm = () => {
           </button>
 
           {/* Login link */}
-          <p style={{ textAlign: "center", marginTop: "14px", fontSize: "14px", color: "#666" }}>
+          <p
+            style={{
+              textAlign: "center",
+              marginTop: "14px",
+              fontSize: "14px",
+              color: "#666",
+            }}
+          >
             Already have an account?{" "}
             <span
               onClick={() => navigate("/login")}
               style={{
-                color: "#2e7d32", fontWeight: "600", cursor: "pointer",
-                textDecoration: "underline", textUnderlineOffset: "2px"
+                color: "#2e7d32",
+                fontWeight: "600",
+                cursor: "pointer",
+                textDecoration: "underline",
+                textUnderlineOffset: "2px",
               }}
             >
               Login
