@@ -32,10 +32,16 @@ const patientSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  photo: { filename: String, path: String },
+
+  documents: [
+    {
+      data: Buffer,
+      contentType: String,
+      filename: String,
+    },
+  ],
 });
 
-
 module.exports =
-  mongoose.models.Patient ||
-  mongoose.model("Patient", patientSchema);
-
+  mongoose.models.Patient || mongoose.model("Patient", patientSchema);
