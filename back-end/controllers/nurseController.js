@@ -14,9 +14,9 @@ const DOCS_DIR = path.resolve(UPLOAD_ROOT, "documents");
   fs.mkdirSync(dir, { recursive: true });
 });
 
-console.log("✅ Upload dirs ready:");
-console.log("   photos    →", PHOTO_DIR);
-console.log("   documents →", DOCS_DIR);
+// console.log("✅ Upload dirs ready:");
+// console.log("   photos    →", PHOTO_DIR);
+// console.log("   documents →", DOCS_DIR);
 
 // ── Multer Storage ─────────────────────────────────────────
 const storage = multer.diskStorage({

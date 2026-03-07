@@ -137,9 +137,9 @@ const DOCS_DIR = path.resolve(UPLOAD_ROOT, "documents");
   fs.mkdirSync(dir, { recursive: true });   // no-op if already exists
 });
 
-console.log("✅ Upload dirs ready:");
-console.log("   photos    →", PHOTO_DIR);
-console.log("   documents →", DOCS_DIR);
+// console.log("✅ Upload dirs ready:");
+// console.log("   photos    →", PHOTO_DIR);
+// console.log("   documents →", DOCS_DIR);
 
 // ── Multer disk storage ───────────────────────────────────────────────────────
 const storage = multer.diskStorage({

@@ -40,6 +40,29 @@ const path = require("path");
 
 const app = express();
 
+// mongoose
+//   .connect("mongodb://localhost:27017/HospitalData")
+//   .then(() => console.log("MongoDB Connected"))
+//   .catch((err) => console.log(err));
+
+require('dotenv').config();
+
+// Check the MongoDB URI
+console.log("MongoDB URI:", process.env.MONGODB_URI);
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/HospitalData", {
+    // useNewUrlParser: true,
+    // useUnifiedTopology: true,
+    tls: true,
+    ssl: true,
+    // sslValidate: false, // only if you're using self-signed certificates
+}).then(() => {
+    console.log("Connected to MongoDB");
+}).catch((error) => {
+    console.error("Error connecting to MongoDB:", error);
+});
+
 app.use(
   cors({
     origin: "http://localhost:3000",
@@ -58,10 +81,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const route = require("./routes/routes");
 
-mongoose
-  .connect("mongodb://localhost:27017/HospitalData")
-  .then(() => console.log("MongoDB Connected"))
-  .catch((err) => console.log(err));
+
 
 app.use("/api", route);
 
