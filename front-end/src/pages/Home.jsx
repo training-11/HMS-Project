@@ -52,6 +52,8 @@ function Home() {
           minHeight: "100vh",
           paddingTop: "60px",
           backgroundImage: `url(${bgImage})`,
+          // linear gradient is used to darken the background for better text visibility 
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${bgImage})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           display: "flex",
