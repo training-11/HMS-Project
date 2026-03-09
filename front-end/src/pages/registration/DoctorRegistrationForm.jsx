@@ -233,8 +233,8 @@ const DoctorRegistrationForm = () => {
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
       />
       <style>{`
-        .container { height:180vh; display:flex; }
-        .hc-bg { min-height:100vh; background:linear-gradient(135deg,#e8f4fd 0%,#f0f9f0 100%); position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+        .hc-outer { height:180vh; display:flex; width:100%; }
+        .hc-bg { width:100%; min-height:100vh; background:linear-gradient(135deg,#e8f4fd 0%,#f0f9f0 100%); position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
         .hc-bg-icons { position:fixed; inset:0; pointer-events:none; z-index:0; }
         .hc-bg-icons svg { position:absolute; opacity:0.18; }
         .hc-card-wrap { position:relative; z-index:1; width:100%; display:flex; justify-content:center; }
@@ -312,7 +312,7 @@ const DoctorRegistrationForm = () => {
         Back
       </button>
 
-      <div className="container">
+      <div className="hc-outer" style={{ width: "100%", minHeight: "100vh" }}>
         <div className="hc-bg">
           <div className="hc-bg-icons">
             <svg
