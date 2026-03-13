@@ -44,8 +44,4 @@ const patientSchema = new mongoose.Schema({
 });
 
 module.exports =
-<<<<<<< HEAD
   mongoose.models.Patient || mongoose.model("Patient", patientSchema);
-=======
-  mongoose.models.Patient || mongoose.model("Patient", patientSchema);
->>>>>>> 1a3240f (Adminform created)
