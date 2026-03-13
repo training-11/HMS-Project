@@ -1,38 +1,54 @@
 const mongoose = require("mongoose");
 
-const patientSchema = new mongoose.Schema({
+const adminSchema = new mongoose.Schema({
   fullName: {
     type: String,
     required: true,
     trim: true,
   },
+
   email: {
     type: String,
     required: true,
-    unique: true, // important
+    unique: true,
     lowercase: true,
   },
+
   phone: {
     type: String,
     required: true,
   },
-  dob: {
-    type: Date,
+
+  employeeId: {
+    type: String,
     required: true,
+    unique: true,
   },
-  bloodGroup: {
+
+  adminRole: {
     type: String,
     required: true,
   },
-  medicalHistory: {
+
+  accessLevel: {
     type: String,
     required: true,
   },
+
+  department: {
+    type: String,
+    required: true,
+  },
+
   password: {
     type: String,
     required: true,
   },
-  photo: { filename: String, path: String },
+
+  photo: {
+    filename: String,
+    path: String,
+  },
 
   documents: [
     {
@@ -41,11 +57,11 @@ const patientSchema = new mongoose.Schema({
       filename: String,
     },
   ],
+
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
-module.exports =
-<<<<<<< HEAD
-  mongoose.models.Patient || mongoose.model("Patient", patientSchema);
-=======
-  mongoose.models.Patient || mongoose.model("Patient", patientSchema);
->>>>>>> 1a3240f (Adminform created)
+module.exports = mongoose.model("admin", adminSchema);

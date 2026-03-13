@@ -118,8 +118,23 @@ exports.registerPatient = async (req, res) => {
         .status(400)
         .json({ message: "A patient with this email already exists" });
     }
+<<<<<<< HEAD
 
     console.error("registerPatient error:", err);
+=======
+
+    console.error("registerPatient error:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ── Get Patients ─────────────────────────────────────────
+exports.getPatients = async (req, res) => {
+  try {
+    const patients = await Patient.find().select("-password");
+    res.json(patients);
+  } catch (err) {
+>>>>>>> 1a3240f (Adminform created)
     res.status(500).json({ message: err.message });
   }
 };

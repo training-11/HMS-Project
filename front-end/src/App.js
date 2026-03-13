@@ -3,6 +3,7 @@ import PatientRegistrationForm from "./pages/registration/PatientRegistrationFor
 //import PatientList from "./pages/registration/PatientList";
 import ContactUs from "./pages/ContactUs";
 import Login from "./pages/registration/Login";
+import AdminRegistrationForm from "./pages/AdminRegistartionForm";
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import DoctorRegistrationForm from "./pages/registration/DoctorRegistrationForm";
@@ -19,6 +20,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/ContactUs" element={<ContactUs />} />
         <Route path="/doctor-register" element={<DoctorRegistrationForm />} />
+        <Route path="/admin-register" element={<AdminRegistrationForm />} />
         <Route path="/aboutUs" element={<AboutUs />} />
       </Routes>
     </BrowserRouter>

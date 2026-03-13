@@ -1,7 +1,5 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-
-
 import Navbar from "../../Components/Navbar";
 
 function PatientRegistrationForm() {

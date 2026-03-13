@@ -4,7 +4,6 @@
 // const bcrypt = require("bcryptjs");
 // const jwt = require("jsonwebtoken");
 
-
 // const ROLE_MODELS = {
 //   doctor: Doctor,
 //   nurse: Nurse,
@@ -15,7 +14,6 @@
 //   try {
 //     const { email, password, role } = req.body;
 //     console.log("LOGIN ATTEMPT:", { email, role }); // <-- add this
-
 
 //     if (!email || !password || !role) {
 //       return res.status(400).json({ message: "Email, password, and role are required" });
@@ -66,19 +64,18 @@
 //   }
 // };
 
-
-
 const Doctor = require("../models/Doctor");
 const Nurse = require("../models/Nurse");
 const Patient = require("../models/Patient");
+const Admin = require("../models/Admin");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-
 
 const ROLE_MODELS = {
   doctor: Doctor,
   nurse: Nurse,
   patient: Patient,
+  admin: Admin,
 };
 
 exports.commonLogin = async (req, res) => {
@@ -86,38 +83,51 @@ exports.commonLogin = async (req, res) => {
     const { email, password, role } = req.body;
 
     if (!email || !password || !role) {
-      return res.status(400).json({ message: "Email, password, and role are required" });
+      return res.status(400).json({
+        message: "Email, password, and role are required",
+      });
     }
 
     const roleLower = role.toLowerCase().trim();
-    const Model = ROLE_MODELS[roleLower];  
+    const Model = ROLE_MODELS[roleLower];
 
     if (!Model) {
-      return res.status(400).json({ message: "Invalid role. Must be doctor, nurse, or patient" });
+      return res.status(400).json({
+        message: "Invalid role. Must be doctor, nurse, patient, or admin",
+      });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    
     const userWithPassword = await Model.findOne({ email: normalizedEmail });
+
     if (!userWithPassword) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(401).json({
+        message: "Invalid email or password",
+      });
     }
 
     const isMatch = await bcrypt.compare(password, userWithPassword.password);
+
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(401).json({
+        message: "Invalid email or password",
+      });
     }
 
     const token = jwt.sign(
-      { id: userWithPassword._id, email: userWithPassword.email, role: roleLower },
+      {
+        id: userWithPassword._id,
+        email: userWithPassword.email,
+        role: roleLower,
+      },
       process.env.JWT_SECRET || "your_jwt_secret_key",
-      { expiresIn: "7d" }
+      { expiresIn: "7d" },
     );
 
-    
-    const safeUser = await Model.findById(userWithPassword._id)
-      .select("-password -photo.data -documents");
+    const safeUser = await Model.findById(userWithPassword._id).select(
+      "-password",
+    );
 
     res.status(200).json({
       message: `${roleLower.charAt(0).toUpperCase() + roleLower.slice(1)} login successful`,
@@ -125,7 +135,6 @@ exports.commonLogin = async (req, res) => {
       role: roleLower,
       user: safeUser,
     });
-
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ message: "Internal server error" });
