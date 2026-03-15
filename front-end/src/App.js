@@ -4,6 +4,7 @@ import PatientRegistrationForm from "./pages/registration/PatientRegistrationFor
 import ContactUs from "./pages/ContactUs";
 import Login from "./pages/registration/Login";
 import AdminRegistrationForm from "./pages/AdminRegistartionForm";
+import AdminDashboard from "./pages/AdminDashboard";
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import DoctorRegistrationForm from "./pages/registration/DoctorRegistrationForm";
@@ -14,6 +15,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/nurse-register" element={<NurseRegistrationForm />} />
         <Route path="/patient-register" element={<PatientRegistrationForm />} />
         {/* <Route path="/patients" element={<PatientList />} /> */}
