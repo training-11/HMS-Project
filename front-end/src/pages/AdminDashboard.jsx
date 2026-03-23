@@ -8,7 +8,7 @@ const ROLE_META = {
   doctor:  { label: "Doctors",  color: "#3b82f6", bg: "rgba(59,130,246,0.12)",  border: "rgba(59,130,246,0.3)",  icon: "🩺" },
   nurse:   { label: "Nurses",   color: "#a855f7", bg: "rgba(168,85,247,0.12)", border: "rgba(168,85,247,0.3)", icon: "💉" },
   patient: { label: "Patients", color: "#10b981", bg: "rgba(16,185,129,0.12)", border: "rgba(16,185,129,0.3)", icon: "🏥" },
-  admin:   { label: "Admins",   color: "#f59e0b", bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.3)",  icon: "🛡️" },
+  // admin:   { label: "Admins",   color: "#f59e0b", bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.3)",  icon: "🛡️" },
 };
 
 // ── tiny helpers ──────────────────────────────────────────────────────────
@@ -21,7 +21,7 @@ const COLS = {
   doctor:  ["fullName", "email", "phone", "specialty", "department"],
   nurse:   ["fullName", "email", "phone", "department"],
   patient: ["fullName", "email", "phone", "bloodGroup", "gender"],
-  admin:   ["fullName", "email", "phone", "adminRole", "department"],
+  // admin:   ["fullName", "email", "phone", "adminRole", "department"],
 };
 const COL_LABELS = {
   fullName: "Name", email: "Email", phone: "Phone",
@@ -33,7 +33,7 @@ const COL_LABELS = {
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("doctor");
-  const [data, setData] = useState({ doctor: [], nurse: [], patient: [], admin: [] });
+  const [data, setData] = useState({ doctor: [], nurse: [], patient: [] });
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null); // "<role>-<id>-verify|delete"
   const [toast, setToast] = useState(null);
@@ -48,7 +48,7 @@ export default function AdminDashboard() {
         fetch(`${API}/getDoc`),
         fetch(`${API}/getNurse`),
         fetch(`${API}/getPatient`),
-        fetch(`${API}/getAdmin`),
+        // fetch(`${API}/getAdmin`),
       ]);
 
       // collect any failed responses
@@ -56,7 +56,7 @@ export default function AdminDashboard() {
         !docRes.ok     && "doctors",
         !nurseRes.ok   && "nurses",
         !patientRes.ok && "patients",
-        !adminRes.ok   && "admins",
+        // !adminRes.ok   && "admins",
       ].filter(Boolean);
 
       if (failed.length === 4) throw new Error("All endpoints failed — is the server running?");
@@ -65,14 +65,14 @@ export default function AdminDashboard() {
         docRes.ok     ? docRes.json()     : Promise.resolve([]),
         nurseRes.ok   ? nurseRes.json()   : Promise.resolve([]),
         patientRes.ok ? patientRes.json() : Promise.resolve([]),
-        adminRes.ok   ? adminRes.json()   : Promise.resolve([]),
+        // adminRes.ok   ? adminRes.json()   : Promise.resolve([]),
       ]);
 
       setData({
         doctor:  Array.isArray(doctors)  ? doctors  : [],
         nurse:   Array.isArray(nurses)   ? nurses   : [],
         patient: Array.isArray(patients) ? patients : [],
-        admin:   Array.isArray(admins)   ? admins   : [],
+        // admin:   Array.isArray(admins)   ? admins   : [],
       });
 
       if (failed.length > 0) {

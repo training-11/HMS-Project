@@ -122,11 +122,21 @@ const Login = () => {
         body: JSON.stringify({ ...formData, role: selectedRole }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        setError(
-          data.message || "Login failed. Please check your credentials.",
-        );
-      } else {
+if (!res.ok) {
+  // 🔥 Admin approval pending
+  if (data.message === "Waiting for admin approval") {
+    setError("Your account is not approved yet. Please wait for admin approval.");
+  } 
+  // 🔥 Rejected case (optional)
+  else if (data.message === "Account rejected") {
+    setError("Your account was rejected by admin.");
+  } 
+  else {
+    setError(
+      data.message || "Login failed. Please check your credentials.",
+    );
+  }
+} else {
         if (data.token) localStorage.setItem("authToken", data.token);
         if (data.user)
           localStorage.setItem(

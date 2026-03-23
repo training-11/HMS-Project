@@ -28,6 +28,11 @@ const nurseSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+    status: {
+    type: String,
+    enum: ["pending", "approved", "rejected"],
+    default: "pending",
+  },
   photo: { filename: String, path: String },
 
   documents: [
@@ -37,5 +42,12 @@ const nurseSchema = new mongoose.Schema({
       filename: String,
     },
   ],
+  isVerified: {
+  type: Boolean,
+  default: false,
+},
+verifiedAt: {
+  type: Date,
+},
 });
 module.exports = mongoose.model("Nurse", nurseSchema);

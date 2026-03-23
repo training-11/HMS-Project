@@ -349,7 +349,7 @@ const Navbar = ({ scrollToRef, homeRef, aboutRef, contactRef }) => {
               <button style={modalBtnStyle} onClick={() => { navigate("/doctor-register");  setShowModal(false); }}>Doctor</button>
               <button style={modalBtnStyle} onClick={() => { navigate("/nurse-register");   setShowModal(false); }}>Nurse</button>
               <button style={modalBtnStyle} onClick={() => { navigate("/patient-register"); setShowModal(false); }}>Patient</button>
-              <button style={modalBtnStyle} onClick={() => { navigate("/Admin-register");   setShowModal(false); }}>Admin</button>
+              {/* <button style={modalBtnStyle} onClick={() => { navigate("/Admin-register");   setShowModal(false); }}>Admin</button> */}
             </div>
           </div>
         </>
