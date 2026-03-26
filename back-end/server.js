@@ -77,7 +77,8 @@ app.use(express.urlencoded({ extended: true }));
 // Serve uploaded files as static — accessible at:
 // http://localhost:8080/uploads/photos/<filename>
 // http://localhost:8080/uploads/documents/<filename>
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use('/uploads/photos', express.static(path.join(__dirname, 'uploads/photos')));
+app.use('/uploads/documents', express.static(path.join(__dirname, 'uploads/documents')));
 
 const route = require("./routes/routes");
 
