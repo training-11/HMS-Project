@@ -9,8 +9,8 @@ const Patient = require("../models/Patient");
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "ramasuryag@apicalsoftsolution.com",
-    pass: "ryrrouqaimyonjgb", // ⚠️ use app password
+    user: "hmsadmin7@gmail.com",
+    pass: "coqgegtjmidfmcnr", // ⚠️ use app password
   },
 });
 
@@ -45,7 +45,7 @@ exports.verifyUser = async (req, res) => {
 
     // ✅ SEND EMAIL
     await transporter.sendMail({
-      from: "ramasuryag@apicalsoftsolution.com",
+      from: "hmsadmin7@gmail.com",
       to: user.email,
       subject: "Account Approved",
       text: `Hello ${user.fullName}, your account has been approved.`,
@@ -80,7 +80,7 @@ exports.rejectUser = async (req, res) => {
 
     // ✅ SEND EMAIL
     await transporter.sendMail({
-      from: "ramasuryag@apicalsoftsolution.com",
+      from: "hmsadmin7@gmail.com",
       to: user.email,
       subject: "Account Rejected",
       text: `Hello ${user.fullName}, your account has been rejected.`,
