@@ -1,135 +1,115 @@
-const Admin  = require("../models/Admin");
-const bcrypt = require("bcryptjs");
-const multer = require("multer");
-const path   = require("path");
-const fs     = require("fs");
+// ✅ IMPORT MODELS
+const nodemailer = require("nodemailer");
+const Doctor = require("../models/Doctor");
+const Nurse = require("../models/Nurse");
+const Patient = require("../models/Patient");
 
-// ── Lazy-load models (handles any capitalisation) ─────────────────────────
-const loadModel = (...names) => {
-  for (const n of names) {
-    try { return require(`../models/${n}`); } catch (_) {}
-  }
-  console.warn(`⚠  Could not load any of: ${names.join(", ")}`);
+
+// ✅ EMAIL SETUP
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: "ramasuryag@apicalsoftsolution.com",
+    pass: "ryrrouqaimyonjgb", // ⚠️ use app password
+  },
+});
+
+// 🔹 helper to select model
+const getModel = (role) => {
+  if (role === "doctor") return Doctor;
+  if (role === "nurse") return Nurse;
+  if (role === "patient") return Patient;
   return null;
 };
 
-const Doctor  = loadModel("Doctor",  "doctor");
-const Nurse   = loadModel("Nurse",   "nurse");
-const Patient = loadModel("Patient", "patient");
 
-console.log("✅ adminController loaded");
-console.log("   Doctor  model:", Doctor  ? "✓" : "✗ NOT FOUND");
-console.log("   Nurse   model:", Nurse   ? "✓" : "✗ NOT FOUND");
-console.log("   Patient model:", Patient ? "✓" : "✗ NOT FOUND");
-console.log("   Admin   model: ✓");
-
-// ── Upload folders ────────────────────────────────────────────────────────
-const UPLOAD_ROOT = path.resolve(__dirname, "..", "uploads");
-const PHOTO_DIR   = path.resolve(UPLOAD_ROOT, "photos");
-const DOCS_DIR    = path.resolve(UPLOAD_ROOT, "documents");
-[UPLOAD_ROOT, PHOTO_DIR, DOCS_DIR].forEach((d) => fs.mkdirSync(d, { recursive: true }));
-
-// ── Multer ────────────────────────────────────────────────────────────────
-const upload = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => cb(null, file.fieldname === "photo" ? PHOTO_DIR : DOCS_DIR),
-    filename:    (req, file, cb) => cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname) || ".jpg"}`),
-  }),
-});
-exports.uploadMiddleware = upload.fields([
-  { name: "photo",     maxCount: 1  },
-  { name: "documents", maxCount: 10 },
-]);
-
-// ── Model map ─────────────────────────────────────────────────────────────
-const MODEL_MAP = { doctor: Doctor, nurse: Nurse, patient: Patient, admin: Admin };
-
-// ── Register Admin ────────────────────────────────────────────────────────
-exports.postAdmin = async (req, res) => {
-  try {
-    const { fullName, email, phone, employeeId, adminRole, accessLevel, department, password } = req.body;
-    if (!fullName || !email || !phone || !employeeId || !adminRole || !accessLevel || !department || !password)
-      return res.status(400).json({ message: "All fields are required" });
-
-    const normalizedEmail = email.toLowerCase().trim();
-    if (await Admin.findOne({ email: normalizedEmail }))
-      return res.status(400).json({ message: "Admin with this email already exists" });
-
-    const photoFile = req.files?.["photo"]?.[0] || null;
-    const docFiles  = req.files?.["documents"]  || [];
-
-    const saved = await new Admin({
-      fullName, email: normalizedEmail, phone, employeeId,
-      adminRole, accessLevel, department,
-      password: await bcrypt.hash(password, 10),
-      photo: photoFile ? { filename: photoFile.filename, path: `uploads/photos/${photoFile.filename}` } : null,
-      documents: docFiles.map((d) => ({ filename: d.originalname, path: `uploads/documents/${d.filename}` })),
-    }).save();
-
-    const result = saved.toObject();
-    delete result.password;
-    res.status(201).json({ message: "Admin registered successfully", admin: result });
-  } catch (err) {
-    if (err.code === 11000) return res.status(400).json({ message: "Admin with this email already exists" });
-    console.error("postAdmin:", err);
-    res.status(500).json({ message: err.message });
-  }
-};
-
-// ── Get Admins ────────────────────────────────────────────────────────────
-exports.getAdmins = async (req, res) => {
-  try {
-    res.json(await Admin.find().select("-password"));
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-// ── Verify User  PATCH /api/verifyUser/:role/:id ──────────────────────────
+// ✅ VERIFY USER
 exports.verifyUser = async (req, res) => {
-  const { role, id } = req.params;
-  console.log(`PATCH verifyUser  role=${role}  id=${id}`);
-
-  const Model = MODEL_MAP[role];
-  if (!Model) return res.status(400).json({ message: `Unknown role: "${role}"` });
-
   try {
+    const { role, id } = req.params;
+
+    const Model = getModel(role);
+    if (!Model) return res.status(400).json({ message: "Invalid role" });
+
     const user = await Model.findByIdAndUpdate(
       id,
-      { $set: { isVerified: true, verifiedAt: new Date() } },
-      { new: true, strict: false }
-    ).select("-password");
+      {
+        isVerified: true,
+        isRejected: false,
+        verifiedAt: new Date(),
+      },
+      { new: true }
+    );
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    console.log(`✅ Verified ${role}: ${user.fullName}`);
-    res.json({ message: "Verified successfully", user });
+    // ✅ SEND EMAIL
+    await transporter.sendMail({
+      from: "ramasuryag@apicalsoftsolution.com",
+      to: user.email,
+      subject: "Account Approved",
+      text: `Hello ${user.fullName}, your account has been approved.`,
+    });
+
+    res.json({ message: "User verified & mail sent", user });
+
   } catch (err) {
-    console.error("verifyUser:", err);
-    res.status(500).json({ message: err.message });
+    console.error("VERIFY ERROR:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-// ── Delete User  DELETE /api/deleteUser/:role/:id ─────────────────────────
-exports.deleteUser = async (req, res) => {
-  const { role, id } = req.params;
-  console.log(`DELETE deleteUser  role=${role}  id=${id}`);
-
-  const Model = MODEL_MAP[role];
-  if (!Model) return res.status(400).json({ message: `Unknown role: "${role}"` });
-
+// ✅ REJECT USER
+exports.rejectUser = async (req, res) => {
   try {
-    const user = await Model.findByIdAndDelete(id);
+    const { role, id } = req.params;
+
+    const Model = getModel(role);
+    if (!Model) return res.status(400).json({ message: "Invalid role" });
+
+    const user = await Model.findByIdAndUpdate(
+      id,
+      {
+        isRejected: true,
+        isVerified: false,
+      },
+      { new: true }
+    );
+
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const rm = (p) => p && fs.unlink(path.resolve(__dirname, "..", p), () => {});
-    rm(user.photo?.path);
-    (user.documents || []).forEach((d) => rm(d.path));
+    // ✅ SEND EMAIL
+    await transporter.sendMail({
+      from: "ramasuryag@apicalsoftsolution.com",
+      to: user.email,
+      subject: "Account Rejected",
+      text: `Hello ${user.fullName}, your account has been rejected.`,
+    });
 
-    console.log(`🗑  Deleted ${role}: ${user.fullName}`);
-    res.json({ message: "Deleted successfully", deletedId: id });
+    res.json({ message: "User rejected & mail sent", user });
+
   } catch (err) {
-    console.error("deleteUser:", err);
-    res.status(500).json({ message: err.message });
+    console.error("REJECT ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// ✅ DELETE USER
+exports.deleteUser = async (req, res) => {
+  try {
+    const { role, id } = req.params;
+
+    const Model = getModel(role);
+    if (!Model) return res.status(400).json({ message: "Invalid role" });
+
+    const user = await Model.findByIdAndDelete(id);
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json({ message: "User deleted successfully" });
+
+  } catch (err) {
+    console.error("DELETE ERROR:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };

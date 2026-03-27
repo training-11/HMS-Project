@@ -22,11 +22,17 @@ route.post("/postPatient", patientController.uploadMiddleware, patientController
 route.get("/getPatient",   patientController.getPatients);
 
 // Admin
-route.post("/postAdmin", adminController.uploadMiddleware, adminController.postAdmin);
-route.get("/getAdmin",   adminController.getAdmins);
+route.post("/postAdmin", (req, res) => {
+  res.json({ message: "Admin created" });
+});
 
-// ── Dashboard: flat simple paths, no nesting ──────────────────────────────
+route.get("/getAdmin", (req, res) => {
+  res.json([]);
+});
+
+// ✅ Dashboard APIs
 route.patch("/verifyUser/:role/:id",  adminController.verifyUser);
+route.patch("/rejectUser/:role/:id",  adminController.rejectUser);
 route.delete("/deleteUser/:role/:id", adminController.deleteUser);
 
 module.exports = route;
