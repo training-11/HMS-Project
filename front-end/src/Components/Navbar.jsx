@@ -1,173 +1,3 @@
-// import { useState } from "react";
-// import { useNavigate, useLocation } from "react-router-dom";
-// import logo from "../assets/hospital-logo.png";
-
-// const Navbar = ({
-//   scrollToRef,
-//   homeRef,
-//   aboutRef,
-//   contactRef
-// }) => {
-//   const navigate = useNavigate();
-//   const location = useLocation();
-//   const [showModal, setShowModal] = useState(false);
-
-//   const handleScroll = (section, ref) => {
-
-//     if (location.pathname !== "/") {
-//       navigate("/", { state: { scrollTo: section } });
-//       return;
-//     }
-
-//     if (typeof scrollToRef === "function" && ref) {
-//       scrollToRef(ref);
-//     }
-//   };
-
-//   return (
-//     <>
-//       <nav
-//         style={{
-//           position: "fixed",
-//           top: 0,
-//           width: "100%",
-//           height: "60px",
-//           background: "#0077b6",
-//           color: "white",
-//           display: "flex",
-//           alignItems: "center",
-//           justifyContent: "space-between",
-//           padding: "0 20px",
-//           zIndex: 1000,
-//         }}
-//       >
-//         <img
-//           src={logo}
-//           alt="logo"
-//           style={{ height: "50px", cursor: "pointer" }}
-//           onClick={() => handleScroll("home", homeRef)}
-//         />
-
-//         <div style={{ display: "flex", gap: "20px" }}>
-//           <span
-//             style={{ cursor: "pointer" }}
-//             onClick={() => handleScroll("home", homeRef)}
-//           >
-//             Home
-//           </span>
-
-//           <span
-//             style={{ cursor: "pointer" }}
-//             onClick={() => handleScroll("about", aboutRef)}
-//           >
-//             About Us
-//           </span>
-
-//           <span
-//             style={{ cursor: "pointer" }}
-//             onClick={() => handleScroll("contact", contactRef)}
-//           >
-//             Contact Us
-//           </span>
-//         </div>
-
-//         <div style={{ display: "flex", gap: "20px" }}>
-//           <span
-//             style={{ cursor: "pointer" }}
-//             onClick={() => setShowModal(true)}
-//           >
-//             Register
-//           </span>
-
-//           <span
-//             style={{ cursor: "pointer" }}
-//             onClick={() => navigate("/login")}
-//           >
-//             Login
-//           </span>
-//         </div>
-//       </nav>
-
-//       {showModal && (
-//         <>
-//           <div
-//             onClick={() => setShowModal(false)}
-//             style={{
-//               position: "fixed",
-//               inset: 0,
-//               backgroundColor: "rgba(0,0,0,0.5)",
-//               zIndex: 1001,
-//             }}
-//           />
-//           <div
-//             style={{
-//               position: "fixed",
-//               top: "50%",
-//               left: "50%",
-//               transform: "translate(-50%, -50%)",
-//               background: "white",
-//               zIndex: 1002,
-//               width: "300px",
-//               borderRadius: "8px",
-//             }}
-//           >
-//             <div
-//               style={{
-//                 padding: "10px",
-//                 background: "#0077b6",
-//                 color: "white",
-//                 display: "flex",
-//                 justifyContent: "space-between",
-//               }}
-//             >
-//               <h5>Register As</h5>
-//               <button
-//                 style={{ background: "transparent", border: "none", color: "white" }}
-//                 onClick={() => setShowModal(false)}
-//               >
-//                 X
-//               </button>
-//             </div>
-
-//             <div
-//               style={{
-//                 padding: "15px",
-//                 display: "flex",
-//                 flexDirection: "column",
-//                 gap: "10px",
-//               }}
-//             >
-//               <button  style={modalBtnStyle} onClick={() => navigate("/doctor-register")}>
-//                 Doctor
-//               </button>
-//               <button style={modalBtnStyle}  onClick={() => navigate("/nurse-register")}>
-//                 Nurse
-//               </button>
-//               <button style={modalBtnStyle}  onClick={() => navigate("/patient-register")}>
-//                 Patient
-//               </button>
-//               <button style={modalBtnStyle}  onClick={() => navigate("/Admin-register")}>
-//                 Admin
-//               </button>
-//             </div>
-//           </div>
-//         </>
-//       )}
-//     </>
-//   );
-// };
-// const modalBtnStyle = {
-//   padding: "10px",
-//   cursor: "pointer",
-//   background: "#023e8a",
-//   color: "white",
-//   border: "none",
-//   borderRadius: "4px",
-// };
-// export default Navbar;
-
-
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/hospital-logo.png";
@@ -178,7 +8,6 @@ const Navbar = ({ scrollToRef, homeRef, aboutRef, contactRef }) => {
   const [showModal, setShowModal] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
 
-  // ── Read userInfo from localStorage on every route change ────────────────
   useEffect(() => {
     try {
       const stored = localStorage.getItem("userInfo");
@@ -189,6 +18,7 @@ const Navbar = ({ scrollToRef, homeRef, aboutRef, contactRef }) => {
   }, [location.pathname]);
 
   const isAdmin = userInfo?.role === "admin";
+  const isDoctor = userInfo?.role === "doctor";
 
   const handleScroll = (section, ref) => {
     if (location.pathname !== "/") {
@@ -222,7 +52,6 @@ const Navbar = ({ scrollToRef, homeRef, aboutRef, contactRef }) => {
           zIndex: 1000,
         }}
       >
-        {/* Logo */}
         <img
           src={logo}
           alt="logo"
@@ -230,7 +59,6 @@ const Navbar = ({ scrollToRef, homeRef, aboutRef, contactRef }) => {
           onClick={() => handleScroll("home", homeRef)}
         />
 
-        {/* Center nav links */}
         <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
           <span style={{ cursor: "pointer" }} onClick={() => handleScroll("home", homeRef)}>
             Home
@@ -242,7 +70,6 @@ const Navbar = ({ scrollToRef, homeRef, aboutRef, contactRef }) => {
             Contact Us
           </span>
 
-          {/* ── Admin Dashboard link — only visible when logged in as admin ── */}
           {isAdmin && (
             <span
               onClick={() => navigate("/admin-dashboard")}
@@ -262,17 +89,39 @@ const Navbar = ({ scrollToRef, homeRef, aboutRef, contactRef }) => {
               onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.28)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.18)")}
             >
-              🛡️ Dashboard
+              Dashboard
+            </span>
+          )}
+
+          {isDoctor && (
+            <span
+              onClick={() => navigate("/doctor-appointments")}
+              style={{
+                cursor: "pointer",
+                background: "rgba(255,255,255,0.18)",
+                border: "1px solid rgba(255,255,255,0.4)",
+                borderRadius: "6px",
+                padding: "4px 12px",
+                fontWeight: "700",
+                fontSize: "13px",
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                transition: "background 0.2s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.28)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.18)")}
+            >
+              Appointments
             </span>
           )}
         </div>
 
-        {/* Right side — Register/Login OR user info + logout */}
         <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
           {userInfo ? (
             <>
               <span style={{ fontSize: "13px", opacity: 0.85 }}>
-                👤 {userInfo.fullName || userInfo.email}
+                {userInfo.fullName || userInfo.email}
               </span>
               <span
                 style={{
@@ -304,7 +153,6 @@ const Navbar = ({ scrollToRef, homeRef, aboutRef, contactRef }) => {
         </div>
       </nav>
 
-      {/* Register modal */}
       {showModal && (
         <>
           <div
@@ -346,10 +194,15 @@ const Navbar = ({ scrollToRef, homeRef, aboutRef, contactRef }) => {
               </button>
             </div>
             <div style={{ padding: "15px", display: "flex", flexDirection: "column", gap: "10px" }}>
-              <button style={modalBtnStyle} onClick={() => { navigate("/doctor-register");  setShowModal(false); }}>Doctor</button>
-              <button style={modalBtnStyle} onClick={() => { navigate("/nurse-register");   setShowModal(false); }}>Nurse</button>
-              <button style={modalBtnStyle} onClick={() => { navigate("/patient-register"); setShowModal(false); }}>Patient</button>
-              {/* <button style={modalBtnStyle} onClick={() => { navigate("/Admin-register");   setShowModal(false); }}>Admin</button> */}
+              <button style={modalBtnStyle} onClick={() => { navigate("/doctor-register"); setShowModal(false); }}>
+                Doctor
+              </button>
+              <button style={modalBtnStyle} onClick={() => { navigate("/nurse-register"); setShowModal(false); }}>
+                Nurse
+              </button>
+              <button style={modalBtnStyle} onClick={() => { navigate("/patient-register"); setShowModal(false); }}>
+                Patient
+              </button>
             </div>
           </div>
         </>

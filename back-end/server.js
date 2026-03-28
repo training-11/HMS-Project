@@ -37,6 +37,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const path = require("path");
+require("dotenv").config();
 
 const app = express();
 
@@ -44,8 +45,6 @@ mongoose
   .connect("mongodb://localhost:27017/HospitalData")
   .then(() => console.log("MongoDB Connected"))
   .catch((err) => console.log(err));
-
-//require('dotenv').config();
 
 //Check the MongoDB URI
 //console.log("MongoDB URI:", process.env.MONGODB_URI);

@@ -9,6 +9,7 @@ const ROLE_META = {
   doctor:  { label: "Doctors",  color: "#3b82f6", bg: "rgba(59,130,246,0.12)",  border: "rgba(59,130,246,0.3)",  icon: "🩺" },
   nurse:   { label: "Nurses",   color: "#a855f7", bg: "rgba(168,85,247,0.12)", border: "rgba(168,85,247,0.3)", icon: "💉" },
   patient: { label: "Patients", color: "#10b981", bg: "rgba(16,185,129,0.12)", border: "rgba(16,185,129,0.3)", icon: "🏥" },
+  appointments: { label: "Appointments", color: "#f59e0b", bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.3)", icon: "📅" },
   // admin:   { label: "Admins",   color: "#f59e0b", bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.3)",  icon: "🛡️" },
 };
 
@@ -31,26 +32,50 @@ const COL_LABELS = {
   adminRole: "Role",
 };
 
+const requiresApproval = (role) => role === "doctor" || role === "nurse";
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("doctor");
   const [data, setData] = useState({ doctor: [], nurse: [], patient: [] });
+  const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null); // "<role>-<id>-verify|delete"
   const [toast, setToast] = useState(null);
   const [search, setSearch] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(null); // { role, id, name }
   const [selectedUser, setSelectedUser] = useState(null);
+  const [showAppointmentModal, setShowAppointmentModal] = useState(false);
+  const [appointmentForm, setAppointmentForm] = useState({
+    patientId: "",
+    doctorId: "",
+    appointmentDate: "",
+    timeSlot: "",
+    notes: "",
+  });
+  const [availableSlots, setAvailableSlots] = useState([]);
+
+  const resetAppointmentForm = () => {
+    setShowAppointmentModal(false);
+    setAppointmentForm({
+      patientId: "",
+      doctorId: "",
+      appointmentDate: "",
+      timeSlot: "",
+      notes: "",
+    });
+    setAvailableSlots([]);
+  };
 
   // ── fetch all users — calls your 4 existing working endpoints in parallel
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const [docRes, nurseRes, patientRes, adminRes] = await Promise.all([
+      const [docRes, nurseRes, patientRes, appointmentsRes] = await Promise.all([
         fetch(`${API}/getDoc`),
         fetch(`${API}/getNurse`),
         fetch(`${API}/getPatient`),
-        // fetch(`${API}/getAdmin`),
+        fetch(`${API}/appointments`),
       ]);
 
       // collect any failed responses
@@ -61,13 +86,15 @@ export default function AdminDashboard() {
         // !adminRes.ok   && "admins",
       ].filter(Boolean);
 
-      if (failed.length === 4) throw new Error("All endpoints failed — is the server running?");
+      if (failed.length === 3 && !appointmentsRes.ok) {
+        throw new Error("All endpoints failed — is the server running?");
+      }
 
-      const [doctors, nurses, patients, admins] = await Promise.all([
+      const [doctors, nurses, patients, appointmentsData] = await Promise.all([
         docRes.ok     ? docRes.json()     : Promise.resolve([]),
         nurseRes.ok   ? nurseRes.json()   : Promise.resolve([]),
         patientRes.ok ? patientRes.json() : Promise.resolve([]),
-        // adminRes.ok   ? adminRes.json()   : Promise.resolve([]),
+        appointmentsRes.ok ? appointmentsRes.json() : Promise.resolve([]),
       ]);
 
       setData({
@@ -76,6 +103,8 @@ export default function AdminDashboard() {
         patient: Array.isArray(patients) ? patients : [],
         // admin:   Array.isArray(admins)   ? admins   : [],
       });
+
+      setAppointments(Array.isArray(appointmentsData) ? appointmentsData : []);
 
       if (failed.length > 0) {
         showToast("error", `Could not load: ${failed.join(", ")}`);
@@ -173,21 +202,130 @@ const handleReject = async (role, id) => {
     }
   };
 
+  // ── appointment functions ──────────────────────────────────────────
+  const fetchAvailableSlots = async (doctorId, date) => {
+    if (!doctorId || !date) return;
+    try {
+      const res = await fetch(`${API}/appointments/available-slots?doctorId=${doctorId}&date=${date}`);
+      if (res.ok) {
+        const data = await res.json();
+        setAvailableSlots(data.availableSlots || []);
+      }
+    } catch (err) {
+      console.error("Fetch slots error:", err);
+    }
+  };
+
+  const handleAppointmentFormChange = (e) => {
+    const { name, value } = e.target;
+    setAppointmentForm({ ...appointmentForm, [name]: value });
+
+    // Fetch available slots when both doctor and date are selected
+    if (name === "doctorId" || name === "appointmentDate") {
+      const doctorId = name === "doctorId" ? value : appointmentForm.doctorId;
+      const date = name === "appointmentDate" ? value : appointmentForm.appointmentDate;
+      if (doctorId && date) {
+        fetchAvailableSlots(doctorId, date);
+      }
+    }
+  };
+
+  const handleCreateAppointment = async (e) => {
+    e.preventDefault();
+    setActionLoading("create-appointment");
+    try {
+      const res = await fetch(`${API}/appointments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(appointmentForm),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || "Failed to create appointment");
+      
+      setAppointments((prev) =>
+        [...prev, json.appointment].sort(
+          (a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate)
+        )
+      );
+      resetAppointmentForm();
+      showToast("success", "Appointment created successfully");
+    } catch (err) {
+      showToast("error", err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleUpdateAppointmentStatus = async (id, status) => {
+    setActionLoading(`appointment-${id}-${status}`);
+    try {
+      const res = await fetch(`${API}/appointments/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || "Failed to update appointment");
+      
+      setAppointments(appointments.map(apt => 
+        apt._id === id ? json.appointment : apt
+      ));
+      showToast("success", "Appointment updated successfully");
+    } catch (err) {
+      showToast("error", err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDeleteAppointment = async (id) => {
+    setActionLoading(`appointment-${id}-delete`);
+    try {
+      const res = await fetch(`${API}/appointments/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete appointment");
+      
+      setAppointments(appointments.filter(apt => apt._id !== id));
+      showToast("success", "Appointment deleted successfully");
+    } catch (err) {
+      showToast("error", err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   // ── filtered list ──────────────────────────────────────────────────────
-  const filtered = data[activeTab].filter((u) => {
-    if (!search.trim()) return true;
-    const q = search.toLowerCase();
-    return (
-      u.fullName?.toLowerCase().includes(q) ||
-      u.email?.toLowerCase().includes(q) ||
-      u.phone?.includes(q)
-    );
-  });
+  const filtered = activeTab === "appointments" 
+    ? appointments.filter((apt) => {
+        if (!search.trim()) return true;
+        const q = search.toLowerCase();
+        return (
+          apt.patient?.fullName?.toLowerCase().includes(q) ||
+          apt.doctor?.fullName?.toLowerCase().includes(q) ||
+          apt.patient?.email?.toLowerCase().includes(q) ||
+          apt.doctor?.email?.toLowerCase().includes(q)
+        );
+      })
+    : data[activeTab]?.filter((u) => {
+        if (!search.trim()) return true;
+        const q = search.toLowerCase();
+        return (
+          u.fullName?.toLowerCase().includes(q) ||
+          u.email?.toLowerCase().includes(q) ||
+          u.phone?.includes(q)
+        );
+      }) || [];
 
   const meta = ROLE_META[activeTab];
-  const totalAll = Object.values(data).reduce((s, arr) => s + arr.length, 0);
-  const verifiedAll = Object.values(data).reduce(
-    (s, arr) => s + arr.filter((u) => u.isVerified).length, 0
+  const totalAll = Object.values(data).reduce((s, arr) => s + arr.length, 0) + appointments.length;
+  const verifiedAll = ["doctor", "nurse"].reduce(
+    (sum, role) => sum + (data[role] || []).filter((u) => u.isVerified).length,
+    0
+  );
+  const pendingAll = ["doctor", "nurse"].reduce(
+    (sum, role) => sum + (data[role] || []).filter((u) => !u.isVerified && !u.isRejected).length,
+    0
   );
 
   return (
@@ -354,6 +492,7 @@ const handleReject = async (role, id) => {
         }
         .badge-verified { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.25); }
         .badge-pending  { background: rgba(245,158,11,0.10); color: #fbbf24; border: 1px solid rgba(245,158,11,0.25); }
+        .badge-rejected { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.25); }
 
         /* ── actions ── */
         .action-cell { display: flex; align-items: center; gap: 8px; }
@@ -491,7 +630,7 @@ const handleReject = async (role, id) => {
           <div className="dash-header">
             <div>
               <div className="dash-title">Admin <span>Dashboard</span></div>
-              <div className="dash-subtitle">// user management &amp; verification panel</div>
+              <div className="dash-subtitle">User management and appointment assignment panel</div>
             </div>
             <button className="dash-refresh" onClick={fetchUsers} disabled={loading}>
               {loading ? <span className="spin" /> : "↻"} Refresh
@@ -503,7 +642,8 @@ const handleReject = async (role, id) => {
             {[
               { label: "total users",    num: totalAll,            c: "#3b82f6", icon: "👥" },
               { label: "verified",       num: verifiedAll,         c: "#10b981", icon: "✅" },
-              { label: "pending",        num: totalAll - verifiedAll, c: "#f59e0b", icon: "⏳" },
+              { label: "pending",        num: pendingAll, c: "#f59e0b", icon: "⏳" },
+              { label: "appointments",   num: appointments.length, c: "#f59e0b", icon: "📅" },
               ...Object.entries(data).map(([role, arr]) => ({
                 label: ROLE_META[role].label.toLowerCase(),
                 num: arr.length, c: ROLE_META[role].color,
@@ -520,17 +660,20 @@ const handleReject = async (role, id) => {
 
           {/* Tabs */}
           <div className="tab-bar">
-            {Object.entries(ROLE_META).map(([role, m]) => (
-              <button
-                key={role}
-                className={`tab-btn${activeTab === role ? " active" : ""}`}
-                style={{ "--tc": m.color, "--tc-bg": m.bg, "--tc-border": m.border }}
-                onClick={() => { setActiveTab(role); setSearch(""); }}
-              >
-                {m.icon} {m.label}
-                <span className="tab-count">{data[role].length}</span>
-              </button>
-            ))}
+            {Object.entries(ROLE_META).map(([role, m]) => {
+              const count = role === "appointments" ? appointments.length : (data[role]?.length || 0);
+              return (
+                <button
+                  key={role}
+                  className={`tab-btn${activeTab === role ? " active" : ""}`}
+                  style={{ "--tc": m.color, "--tc-bg": m.bg, "--tc-border": m.border }}
+                  onClick={() => { setActiveTab(role); setSearch(""); }}
+                >
+                  {m.icon} {m.label}
+                  <span className="tab-count">{count}</span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Toolbar */}
@@ -538,31 +681,175 @@ const handleReject = async (role, id) => {
             <div className="search-wrap">
               <span className="search-icon">🔍</span>
               <input
-                placeholder={`Search ${meta.label.toLowerCase()} by name, email or phone…`}
+                placeholder={
+                  activeTab === "appointments"
+                    ? "Search appointments by patient or doctor…"
+                    : `Search ${meta.label.toLowerCase()} by name, email or phone…`
+                }
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
             <div className="result-count">{filtered.length} result{filtered.length !== 1 ? "s" : ""}</div>
+            {activeTab === "appointments" && (
+              <button
+                className="dash-refresh"
+                onClick={() => setShowAppointmentModal(true)}
+                style={{ marginLeft: "auto" }}
+              >
+                ➕ Assign Patient
+              </button>
+            )}
           </div>
 
           {/* Table */}
           <div className="table-wrap">
             <div className="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>User</th>
-                    {COLS[activeTab].slice(1).map((col) => (
-                      <th key={col}>{COL_LABELS[col] || col}</th>
-                    ))}
-                    <th>Joined</th>
-                    <th>Status</th>
-                    {/* <th>Actions</th> */}
-                  </tr>
-                </thead>
-                <tbody>
+              {activeTab === "appointments" ? (
+                // Appointments Table
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Patient</th>
+                      <th>Doctor</th>
+                      <th>Date</th>
+                      <th>Time Slot</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      Array.from({ length: 5 }).map((_, i) => (
+                        <tr key={i} className="skeleton-row">
+                          {Array.from({ length: 7 }).map((__, j) => (
+                            <td key={j}><div className="skel" style={{ width: j === 0 ? 20 : 100 }} /></td>
+                          ))}
+                        </tr>
+                      ))
+                    ) : filtered.length === 0 ? (
+                      <tr>
+                        <td colSpan={7}>
+                          <div className="empty-state">
+                            <div className="empty-icon">{search ? "🔍" : meta.icon}</div>
+                            <div className="empty-text">
+                              {search ? `No results for "${search}"` : `No appointments scheduled yet`}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      filtered.map((apt, idx) => {
+                        const isUpdating = actionLoading?.startsWith(`appointment-${apt._id}-`);
+                        
+                        return (
+                          <tr key={apt._id}>
+                            <td style={{ color: "#334155", fontFamily: "'DM Mono',monospace", fontSize: 12 }}>
+                              {idx + 1}
+                            </td>
+                            
+                            <td>
+                              <div className="user-cell">
+                                <div className="avatar" style={{ "--av-bg": "#10b98118", "--av-c": "#10b981", "--av-border": "#10b98140" }}>
+                                  {initials(apt.patient?.fullName || "?")}
+                                </div>
+                                <div>
+                                  <div className="user-name">{apt.patient?.fullName || "N/A"}</div>
+                                  <div className="user-id">{apt.patient?.email || ""}</div>
+                                </div>
+                              </div>
+                            </td>
+                            
+                            <td>
+                              <div className="user-cell">
+                                <div className="avatar" style={{ "--av-bg": "#3b82f618", "--av-c": "#3b82f6", "--av-border": "#3b82f640" }}>
+                                  {initials(apt.doctor?.fullName || "?")}
+                                </div>
+                                <div>
+                                  <div className="user-name">{apt.doctor?.fullName || "N/A"}</div>
+                                  <div className="user-id">{apt.doctor?.specialty || ""}</div>
+                                </div>
+                              </div>
+                            </td>
+                            
+                            <td style={{ fontFamily: "'DM Mono',monospace", fontSize: 12 }}>
+                              {fmtDate(apt.appointmentDate)}
+                            </td>
+                            
+                            <td style={{ fontFamily: "'DM Mono',monospace", fontSize: 13, color: "#94a3b8" }}>
+                              {apt.timeSlot}
+                            </td>
+                            
+                            <td>
+                              <span className={`badge badge-${apt.status === "scheduled" ? "pending" : apt.status === "completed" ? "verified" : "rejected"}`}>
+                                {apt.status === "scheduled" ? "⏳" : apt.status === "completed" ? "✓" : apt.status === "cancelled" ? "✕" : "⊘"} {apt.status}
+                              </span>
+                            </td>
+                            
+                            <td>
+                              <div className="action-cell">
+                                {apt.status === "scheduled" && (
+                                  <>
+                                    <button
+                                      className="btn-verify"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleUpdateAppointmentStatus(apt._id, "completed");
+                                      }}
+                                      disabled={isUpdating}
+                                    >
+                                      ✓ Complete
+                                    </button>
+                                    <button
+                                      className="btn-delete"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleUpdateAppointmentStatus(apt._id, "cancelled");
+                                      }}
+                                      disabled={isUpdating}
+                                    >
+                                      ✕ Cancel
+                                    </button>
+                                  </>
+                                )}
+                                <button
+                                  className="btn-delete"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (window.confirm(`Delete appointment for ${apt.patient?.fullName}?`)) {
+                                      handleDeleteAppointment(apt._id);
+                                    }
+                                  }}
+                                  disabled={isUpdating}
+                                  style={{ marginLeft: "4px" }}
+                                >
+                                  🗑️
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              ) : (
+                // Users Table (Doctor, Nurse, Patient)
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>User</th>
+                      {COLS[activeTab]?.slice(1).map((col) => (
+                        <th key={col}>{COL_LABELS[col] || col}</th>
+                      ))}
+                      <th>Joined</th>
+                      <th>Status</th>
+                      {/* <th>Actions</th> */}
+                    </tr>
+                  </thead>
+                  <tbody>
                   {loading ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <tr key={i} className="skeleton-row">
@@ -585,8 +872,6 @@ const handleReject = async (role, id) => {
                   ) : (
                     filtered.map((user, idx) => {
                       const avColor = meta.color;
-                      const isVerifying = actionLoading === `${activeTab}-${user._id}-verify`;
-                      const isDeleting  = actionLoading === `${activeTab}-${user._id}-delete`;
                       const photoUrl = user.photo?.path
                         ? `http://localhost:8080/${user.photo.path}`
                         : null;
@@ -640,9 +925,13 @@ const handleReject = async (role, id) => {
 
                           {/* Status */}
                           <td>
-                            {user.isVerified
-                              ? <span className="badge badge-verified">✓ Verified</span>
-                              : <span className="badge badge-pending">⏳ Pending</span>}
+                            {requiresApproval(activeTab)
+                              ? (user.isVerified
+                                  ? <span className="badge badge-verified">Verified</span>
+                                  : user.isRejected
+                                    ? <span className="badge badge-rejected">Rejected</span>
+                                    : <span className="badge badge-pending">Pending</span>)
+                              : <span className="badge badge-verified">Registered</span>}
                           </td>
 
                           {/* Actions
@@ -679,11 +968,230 @@ const handleReject = async (role, id) => {
                   )}
                 </tbody>
               </table>
+              )}
             </div>
           </div>
 
         </div>
       </div>
+
+      {/* Appointment Creation Modal */}
+      {showAppointmentModal && (
+        <div className="overlay" onClick={(e) => { if (e.target === e.currentTarget) resetAppointmentForm(); }}>
+          <div className="confirm-box" style={{ maxWidth: "520px" }}>
+            <h5>Assign Patient To Doctor</h5>
+            <form onSubmit={handleCreateAppointment} style={{ marginTop: "20px" }}>
+              
+              {/* Patient Selection */}
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "13px", color: "#94a3b8", fontWeight: 600 }}>
+                  Patient *
+                </label>
+                <select
+                  name="patientId"
+                  value={appointmentForm.patientId}
+                  onChange={handleAppointmentFormChange}
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    background: "rgba(15,23,42,0.8)",
+                    border: "1px solid rgba(99,179,237,0.15)",
+                    borderRadius: "8px",
+                    color: "#e2e8f0",
+                    fontSize: "13px",
+                    fontFamily: "'Syne', sans-serif",
+                    outline: "none",
+                  }}
+                >
+                  <option value="">Select a patient</option>
+                  {data.patient.map((p) => (
+                    <option key={p._id} value={p._id}>
+                      {p.fullName} - {p.email}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Doctor Selection */}
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "13px", color: "#94a3b8", fontWeight: 600 }}>
+                  Doctor *
+                </label>
+                <select
+                  name="doctorId"
+                  value={appointmentForm.doctorId}
+                  onChange={handleAppointmentFormChange}
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    background: "rgba(15,23,42,0.8)",
+                    border: "1px solid rgba(99,179,237,0.15)",
+                    borderRadius: "8px",
+                    color: "#e2e8f0",
+                    fontSize: "13px",
+                    fontFamily: "'Syne', sans-serif",
+                    outline: "none",
+                  }}
+                >
+                  <option value="">Select a doctor</option>
+                  {data.doctor.filter(d => d.isVerified).map((d) => (
+                    <option key={d._id} value={d._id}>
+                      Dr. {d.fullName} - {d.specialty}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Date Selection */}
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "13px", color: "#94a3b8", fontWeight: 600 }}>
+                  Appointment Date *
+                </label>
+                <input
+                  type="date"
+                  name="appointmentDate"
+                  value={appointmentForm.appointmentDate}
+                  onChange={handleAppointmentFormChange}
+                  min={new Date().toISOString().split('T')[0]}
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    background: "rgba(15,23,42,0.8)",
+                    border: "1px solid rgba(99,179,237,0.15)",
+                    borderRadius: "8px",
+                    color: "#e2e8f0",
+                    fontSize: "13px",
+                    fontFamily: "'Syne', sans-serif",
+                    outline: "none",
+                  }}
+                />
+              </div>
+
+              {/* Time Slot Selection */}
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "13px", color: "#94a3b8", fontWeight: 600 }}>
+                  Time Slot *
+                </label>
+                {appointmentForm.doctorId && appointmentForm.appointmentDate ? (
+                  availableSlots.length > 0 ? (
+                    <select
+                      name="timeSlot"
+                      value={appointmentForm.timeSlot}
+                      onChange={handleAppointmentFormChange}
+                      required
+                      style={{
+                        width: "100%",
+                        padding: "10px 12px",
+                        background: "rgba(15,23,42,0.8)",
+                        border: "1px solid rgba(99,179,237,0.15)",
+                        borderRadius: "8px",
+                        color: "#e2e8f0",
+                        fontSize: "13px",
+                        fontFamily: "'Syne', sans-serif",
+                        outline: "none",
+                      }}
+                    >
+                      <option value="">Select a time slot</option>
+                      {availableSlots.map((slot) => (
+                        <option key={slot} value={slot}>
+                          {slot}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div style={{ padding: "10px", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: "8px", color: "#fbbf24", fontSize: "12px" }}>
+                      No available slots for this doctor on the selected date
+                    </div>
+                  )
+                ) : (
+                  <div style={{ padding: "10px", background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.3)", borderRadius: "8px", color: "#60a5fa", fontSize: "12px" }}>
+                    Please select doctor and date first
+                  </div>
+                )}
+              </div>
+
+              {/* Notes */}
+              <div style={{ marginBottom: "20px" }}>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "13px", color: "#94a3b8", fontWeight: 600 }}>
+                  Notes (Optional)
+                </label>
+                <textarea
+                  name="notes"
+                  value={appointmentForm.notes}
+                  onChange={handleAppointmentFormChange}
+                  rows={3}
+                  placeholder="Any special instructions or notes..."
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    background: "rgba(15,23,42,0.8)",
+                    border: "1px solid rgba(99,179,237,0.15)",
+                    borderRadius: "8px",
+                    color: "#e2e8f0",
+                    fontSize: "13px",
+                    fontFamily: "'Syne', sans-serif",
+                    outline: "none",
+                    resize: "vertical",
+                  }}
+                />
+              </div>
+
+              {appointmentForm.patientId && appointmentForm.doctorId && appointmentForm.appointmentDate && appointmentForm.timeSlot && (
+                <div
+                  style={{
+                    marginBottom: "20px",
+                    padding: "12px 14px",
+                    background: "rgba(59,130,246,0.08)",
+                    border: "1px solid rgba(59,130,246,0.22)",
+                    borderRadius: "10px",
+                    color: "#cbd5e1",
+                    fontSize: "12px",
+                    lineHeight: 1.6,
+                  }}
+                >
+                  Assignment ready:
+                  {" "}
+                  {data.patient.find((p) => p._id === appointmentForm.patientId)?.fullName || "Selected patient"}
+                  {" "}
+                  Dr.
+                  {" "}
+                  {data.doctor.find((d) => d._id === appointmentForm.doctorId)?.fullName || "Selected doctor"}
+                  {" "}
+                  on
+                  {" "}
+                  {appointmentForm.appointmentDate}
+                  {" "}
+                  at
+                  {" "}
+                  {appointmentForm.timeSlot}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="confirm-actions">
+                <button
+                  type="submit"
+                  className="btn-confirm-del"
+                  disabled={actionLoading === "create-appointment" || !availableSlots.length}
+                  style={{ background: "#10b981", borderColor: "#10b981" }}
+                >
+                  {actionLoading === "create-appointment" ? "Assigning..." : "Assign Time Slot"}
+                </button>
+                <button
+                  type="button"
+                  className="btn-confirm-cancel"
+                  onClick={resetAppointmentForm}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirm Modal */}
       {confirmDelete && (
@@ -746,6 +1254,7 @@ const handleReject = async (role, id) => {
       <p><b>Joined:</b> {fmtDate(selectedUser.createdAt)}</p>
 
       {/* ✅ DOCUMENTS */}
+      {/* ? DOCUMENTS */}
       {selectedUser.documents && selectedUser.documents.length > 0 && (
         <div style={{ marginTop: "15px" }}>
           <b>Documents:</b>
@@ -772,40 +1281,37 @@ const handleReject = async (role, id) => {
         </div>
       )}
 
-      {/* 🔥 ACTION BUTTONS (THIS WAS MISSING) */}
       <div style={{ marginTop: "20px", display: "flex", gap: "10px" }}>
 
-        {/* ✅ VERIFY */}
-        {selectedUser.isVerified ? (
-          <button className="btn-verify done" disabled>
-            ✓ Accepted
-          </button>
-        ) : (
-          <button
-            className="btn-verify"
-            onClick={() => {
-              handleVerify(activeTab, selectedUser._id);
-              setSelectedUser(null);
-            }}
-          >
-            ✓ Accept
-          </button>
+        {requiresApproval(activeTab) && (
+          selectedUser.isVerified ? (
+            <button className="btn-verify done" disabled>
+              Accepted
+            </button>
+          ) : (
+            <>
+              <button
+                className="btn-verify"
+                onClick={() => {
+                  handleVerify(activeTab, selectedUser._id);
+                  setSelectedUser(null);
+                }}
+              >
+                Accept
+              </button>
+              <button
+                className="btn-delete"
+                onClick={() => {
+                  handleReject(activeTab, selectedUser._id);
+                  setSelectedUser(null);
+                }}
+              >
+                Reject
+              </button>
+            </>
+          )
         )}
 
-  {/* ❌ REJECT (only when NOT verified) */}
-  {!selectedUser.isVerified && (
-    <button
-      className="btn-delete"
-      onClick={() => {
-        handleReject(activeTab, selectedUser._id);
-        setSelectedUser(null);
-      }}
-    >
-      ✕ Reject
-    </button>
-  )}
-
-        {/* ❌ DELETE */}
         <button
           className="btn-delete"
           onClick={() => {
@@ -817,10 +1323,9 @@ const handleReject = async (role, id) => {
             setSelectedUser(null);
           }}
         >
-          ✕ Delete
+          Delete
         </button>
 
-        {/* CLOSE */}
         <button
           className="btn-confirm-cancel"
           onClick={() => setSelectedUser(null)}
@@ -832,7 +1337,6 @@ const handleReject = async (role, id) => {
     </div>
   </div>
 )}
-      {/* Toast */}
       {toast && (
         <div className={`toast toast-${toast.type}`}>
           {toast.type === "success" ? "✓" : "⚠"} {toast.msg}
@@ -841,3 +1345,8 @@ const handleReject = async (role, id) => {
     </>
   );
 }
+
+
+
+
+

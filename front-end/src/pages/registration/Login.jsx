@@ -143,7 +143,13 @@ if (!res.ok) {
             "userInfo",
             JSON.stringify({ ...data.user, role: selectedRole }),
           );
-        navigate(`/`);
+        if (selectedRole === "admin") {
+          navigate("/admin-dashboard");
+        } else if (selectedRole === "doctor") {
+          navigate("/doctor-appointments");
+        } else {
+          navigate(`/`);
+        }
       }
     } catch (err) {
       setError("Could not connect to server. Please try again.");

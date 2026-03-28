@@ -1,35 +1,31 @@
-// ✅ IMPORT MODELS
-const nodemailer = require("nodemailer");
 const Doctor = require("../models/Doctor");
 const Nurse = require("../models/Nurse");
 const Patient = require("../models/Patient");
+const sendMail = require("../utils/sendMail");
 
+const getApprovalModel = (role) => {
+  if (role === "doctor") return Doctor;
+  if (role === "nurse") return Nurse;
+  return null;
+};
 
-// ✅ EMAIL SETUP
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: "hmsadmin7@gmail.com",
-    pass: "coqgegtjmidfmcnr", // ⚠️ use app password
-  },
-});
-
-// 🔹 helper to select model
-const getModel = (role) => {
+const getDeleteModel = (role) => {
   if (role === "doctor") return Doctor;
   if (role === "nurse") return Nurse;
   if (role === "patient") return Patient;
   return null;
 };
 
-
-// ✅ VERIFY USER
 exports.verifyUser = async (req, res) => {
   try {
     const { role, id } = req.params;
 
-    const Model = getModel(role);
-    if (!Model) return res.status(400).json({ message: "Invalid role" });
+    const Model = getApprovalModel(role);
+    if (!Model) {
+      return res.status(400).json({
+        message: "Only doctors and nurses require admin verification",
+      });
+    }
 
     const user = await Model.findByIdAndUpdate(
       id,
@@ -41,31 +37,37 @@ exports.verifyUser = async (req, res) => {
       { new: true }
     );
 
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-    // ✅ SEND EMAIL
-    await transporter.sendMail({
-      from: "hmsadmin7@gmail.com",
-      to: user.email,
-      subject: "Account Approved",
-      text: `Hello ${user.fullName}, your account has been approved.`,
+    const mailResult = await sendMail(
+      user.email,
+      "Account Approved",
+      `Hello ${user.fullName}, your account has been approved. You can now log in to the hospital management system.`
+    );
+
+    res.json({
+      message: mailResult.sent ? "User verified and email sent" : "User verified successfully",
+      user,
+      emailSent: Boolean(mailResult.sent),
     });
-
-    res.json({ message: "User verified & mail sent", user });
-
   } catch (err) {
     console.error("VERIFY ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-// ✅ REJECT USER
 exports.rejectUser = async (req, res) => {
   try {
     const { role, id } = req.params;
 
-    const Model = getModel(role);
-    if (!Model) return res.status(400).json({ message: "Invalid role" });
+    const Model = getApprovalModel(role);
+    if (!Model) {
+      return res.status(400).json({
+        message: "Only doctors and nurses can be rejected by admin",
+      });
+    }
 
     const user = await Model.findByIdAndUpdate(
       id,
@@ -76,38 +78,43 @@ exports.rejectUser = async (req, res) => {
       { new: true }
     );
 
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-    // ✅ SEND EMAIL
-    await transporter.sendMail({
-      from: "hmsadmin7@gmail.com",
-      to: user.email,
-      subject: "Account Rejected",
-      text: `Hello ${user.fullName}, your account has been rejected.`,
+    const mailResult = await sendMail(
+      user.email,
+      "Account Rejected",
+      `Hello ${user.fullName}, your account registration has been rejected by admin. Please contact the hospital for more details.`
+    );
+
+    res.json({
+      message: mailResult.sent ? "User rejected and email sent" : "User rejected successfully",
+      user,
+      emailSent: Boolean(mailResult.sent),
     });
-
-    res.json({ message: "User rejected & mail sent", user });
-
   } catch (err) {
     console.error("REJECT ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-// ✅ DELETE USER
 exports.deleteUser = async (req, res) => {
   try {
     const { role, id } = req.params;
 
-    const Model = getModel(role);
-    if (!Model) return res.status(400).json({ message: "Invalid role" });
+    const Model = getDeleteModel(role);
+    if (!Model) {
+      return res.status(400).json({ message: "Invalid role" });
+    }
 
     const user = await Model.findByIdAndDelete(id);
 
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     res.json({ message: "User deleted successfully" });
-
   } catch (err) {
     console.error("DELETE ERROR:", err);
     res.status(500).json({ message: "Server error" });
