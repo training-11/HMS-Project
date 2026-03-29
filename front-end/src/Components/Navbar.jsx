@@ -19,6 +19,7 @@ const Navbar = ({ scrollToRef, homeRef, aboutRef, contactRef }) => {
 
   const isAdmin = userInfo?.role === "admin";
   const isDoctor = userInfo?.role === "doctor";
+  const isNurse = userInfo?.role === "nurse";
 
   const handleScroll = (section, ref) => {
     if (location.pathname !== "/") {
@@ -96,6 +97,29 @@ const Navbar = ({ scrollToRef, homeRef, aboutRef, contactRef }) => {
           {isDoctor && (
             <span
               onClick={() => navigate("/doctor-appointments")}
+              style={{
+                cursor: "pointer",
+                background: "rgba(255,255,255,0.18)",
+                border: "1px solid rgba(255,255,255,0.4)",
+                borderRadius: "6px",
+                padding: "4px 12px",
+                fontWeight: "700",
+                fontSize: "13px",
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                transition: "background 0.2s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.28)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.18)")}
+            >
+              Appointments
+            </span>
+          )}
+
+          {isNurse && (
+            <span
+              onClick={() => navigate("/nurse-appointments")}
               style={{
                 cursor: "pointer",
                 background: "rgba(255,255,255,0.18)",

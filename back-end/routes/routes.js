@@ -47,6 +47,7 @@ const nurseController   = require("../controllers/nurseController");
 const patientController = require("../controllers/patientController");
 const adminController   = require("../controllers/adminController");
 const appointmentController = require("../controllers/appointmentController");
+const nurseAssignmentController = require("../controllers/nurseAssignmentController");
 
 route.post("/login", authController.commonLogin);
 
@@ -84,5 +85,11 @@ route.get("/appointments/patient/:patientId", appointmentController.getAppointme
 route.get("/appointments/available-slots", appointmentController.getAvailableSlots);
 route.patch("/appointments/:id", appointmentController.updateAppointmentStatus);
 route.delete("/appointments/:id", appointmentController.deleteAppointment);
+
+// ✅ Nurse Assignment APIs
+route.post("/nurse-assignments", nurseAssignmentController.createOrUpdateAssignment);
+route.get("/nurse-assignments", nurseAssignmentController.getAssignments);
+route.get("/nurse-assignments/nurse/:nurseId", nurseAssignmentController.getAssignmentsByNurse);
+route.delete("/nurse-assignments/:id", nurseAssignmentController.deleteAssignment);
 
 module.exports = route;

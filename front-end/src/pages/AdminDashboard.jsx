@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../Components/Navbar";
+import NurseAssignmentsPanel from "./NurseAssignmentsPanel";
 
 const API = "http://localhost:8080/api";
 
@@ -10,6 +11,7 @@ const ROLE_META = {
   nurse:   { label: "Nurses",   color: "#a855f7", bg: "rgba(168,85,247,0.12)", border: "rgba(168,85,247,0.3)", icon: "💉" },
   patient: { label: "Patients", color: "#10b981", bg: "rgba(16,185,129,0.12)", border: "rgba(16,185,129,0.3)", icon: "🏥" },
   appointments: { label: "Appointments", color: "#f59e0b", bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.3)", icon: "📅" },
+  nurseAssignments: { label: "Nurse Assignments", color: "#ec4899", bg: "rgba(236,72,153,0.12)", border: "rgba(236,72,153,0.3)", icon: "🛏️" },
   // admin:   { label: "Admins",   color: "#f59e0b", bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.3)",  icon: "🛡️" },
 };
 
@@ -39,6 +41,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("doctor");
   const [data, setData] = useState({ doctor: [], nurse: [], patient: [] });
   const [appointments, setAppointments] = useState([]);
+  const [nurseAssignments, setNurseAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null); // "<role>-<id>-verify|delete"
   const [toast, setToast] = useState(null);
@@ -71,11 +74,12 @@ export default function AdminDashboard() {
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const [docRes, nurseRes, patientRes, appointmentsRes] = await Promise.all([
+      const [docRes, nurseRes, patientRes, appointmentsRes, nurseAssignmentsRes] = await Promise.all([
         fetch(`${API}/getDoc`),
         fetch(`${API}/getNurse`),
         fetch(`${API}/getPatient`),
         fetch(`${API}/appointments`),
+        fetch(`${API}/nurse-assignments`),
       ]);
 
       // collect any failed responses
@@ -90,11 +94,12 @@ export default function AdminDashboard() {
         throw new Error("All endpoints failed — is the server running?");
       }
 
-      const [doctors, nurses, patients, appointmentsData] = await Promise.all([
+      const [doctors, nurses, patients, appointmentsData, nurseAssignmentsData] = await Promise.all([
         docRes.ok     ? docRes.json()     : Promise.resolve([]),
         nurseRes.ok   ? nurseRes.json()   : Promise.resolve([]),
         patientRes.ok ? patientRes.json() : Promise.resolve([]),
         appointmentsRes.ok ? appointmentsRes.json() : Promise.resolve([]),
+        nurseAssignmentsRes.ok ? nurseAssignmentsRes.json() : Promise.resolve([]),
       ]);
 
       setData({
@@ -105,6 +110,7 @@ export default function AdminDashboard() {
       });
 
       setAppointments(Array.isArray(appointmentsData) ? appointmentsData : []);
+      setNurseAssignments(Array.isArray(nurseAssignmentsData) ? nurseAssignmentsData : []);
 
       if (failed.length > 0) {
         showToast("error", `Could not load: ${failed.join(", ")}`);
@@ -307,6 +313,19 @@ const handleReject = async (role, id) => {
           apt.doctor?.email?.toLowerCase().includes(q)
         );
       })
+    : activeTab === "nurseAssignments"
+    ? nurseAssignments.filter((assignment) => {
+        if (!search.trim()) return true;
+        const q = search.toLowerCase();
+        return (
+          assignment.nurse?.fullName?.toLowerCase().includes(q) ||
+          assignment.nurse?.email?.toLowerCase().includes(q) ||
+          assignment.shift?.toLowerCase().includes(q) ||
+          assignment.patients?.some((patient) =>
+            patient.fullName?.toLowerCase().includes(q)
+          )
+        );
+      })
     : data[activeTab]?.filter((u) => {
         if (!search.trim()) return true;
         const q = search.toLowerCase();
@@ -318,7 +337,7 @@ const handleReject = async (role, id) => {
       }) || [];
 
   const meta = ROLE_META[activeTab];
-  const totalAll = Object.values(data).reduce((s, arr) => s + arr.length, 0) + appointments.length;
+  const totalAll = Object.values(data).reduce((s, arr) => s + arr.length, 0) + appointments.length + nurseAssignments.length;
   const verifiedAll = ["doctor", "nurse"].reduce(
     (sum, role) => sum + (data[role] || []).filter((u) => u.isVerified).length,
     0
@@ -644,6 +663,7 @@ const handleReject = async (role, id) => {
               { label: "verified",       num: verifiedAll,         c: "#10b981", icon: "✅" },
               { label: "pending",        num: pendingAll, c: "#f59e0b", icon: "⏳" },
               { label: "appointments",   num: appointments.length, c: "#f59e0b", icon: "📅" },
+              { label: "nurse shifts",   num: nurseAssignments.length, c: "#ec4899", icon: "🛏️" },
               ...Object.entries(data).map(([role, arr]) => ({
                 label: ROLE_META[role].label.toLowerCase(),
                 num: arr.length, c: ROLE_META[role].color,
@@ -661,7 +681,7 @@ const handleReject = async (role, id) => {
           {/* Tabs */}
           <div className="tab-bar">
             {Object.entries(ROLE_META).map(([role, m]) => {
-              const count = role === "appointments" ? appointments.length : (data[role]?.length || 0);
+              const count = role === "appointments" ? appointments.length : role === "nurseAssignments" ? nurseAssignments.length : (data[role]?.length || 0);
               return (
                 <button
                   key={role}
@@ -676,6 +696,17 @@ const handleReject = async (role, id) => {
             })}
           </div>
 
+          {activeTab === "nurseAssignments" ? (
+            <NurseAssignmentsPanel
+              nurses={data.nurse}
+              patients={data.patient}
+              assignments={nurseAssignments}
+              setAssignments={setNurseAssignments}
+              loading={loading}
+              showToast={showToast}
+            />
+          ) : (
+            <>
           {/* Toolbar */}
           <div className="toolbar">
             <div className="search-wrap">
@@ -971,6 +1002,8 @@ const handleReject = async (role, id) => {
               )}
             </div>
           </div>
+            </>
+          )}
 
         </div>
       </div>
@@ -1345,6 +1378,10 @@ const handleReject = async (role, id) => {
     </>
   );
 }
+
+
+
+
 
 
 

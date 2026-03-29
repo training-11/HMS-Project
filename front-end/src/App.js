@@ -6,6 +6,7 @@ import Login from "./pages/registration/Login";
 import AdminRegistrationForm from "./pages/AdminRegistartionForm";
 import AdminDashboard from "./pages/AdminDashboard";
 import DoctorAppointments from "./pages/DoctorAppointments";
+import NurseAppointments from "./pages/NurseAppointments";
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import DoctorRegistrationForm from "./pages/registration/DoctorRegistrationForm";
@@ -18,6 +19,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/doctor-appointments" element={<DoctorAppointments />} />
+        <Route path="/nurse-appointments" element={<NurseAppointments />} />
         <Route path="/nurse-register" element={<NurseRegistrationForm />} />
         <Route path="/patient-register" element={<PatientRegistrationForm />} />
         {/* <Route path="/patients" element={<PatientList />} /> */}

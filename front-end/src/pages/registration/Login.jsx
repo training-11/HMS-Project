@@ -147,6 +147,8 @@ if (!res.ok) {
           navigate("/admin-dashboard");
         } else if (selectedRole === "doctor") {
           navigate("/doctor-appointments");
+        } else if (selectedRole === "nurse") {
+          navigate("/nurse-appointments");
         } else {
           navigate(`/`);
         }
