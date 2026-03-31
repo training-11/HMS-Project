@@ -1,6 +1,18 @@
 const Appointment = require("../models/Appointment");
 const Doctor = require("../models/Doctor");
 const Patient = require("../models/Patient");
+const nodemailer = require("nodemailer");
+
+console.log("EMAIL_USER:", process.env.EMAIL_USER);
+console.log("EMAIL_PASS:", process.env.EMAIL_PASS);
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS, 
+  },
+});
 
 // Time slots available (9 AM to 5 PM, 1-hour slots)
 const TIME_SLOTS = [
@@ -107,6 +119,42 @@ exports.createAppointment = async (req, res) => {
     });
 
     await appointment.save();
+
+    // ✅ SEND MAIL TO DOCTOR
+    try {
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: doctor.email,
+        subject: "New Patient Assigned 🏥",
+        html: `
+          <h2>New Appointment Assigned</h2>
+          <p><b>Patient Name:</b> ${patient.fullName}</p>
+          <p><b>Date:</b> ${appointmentDate}</p>
+          <p><b>Time Slot:</b> ${timeSlot}</p>
+          <p>Please login to your dashboard.</p>
+        `,
+      });
+    } catch (mailErr) {
+      console.error("Mail send error:", mailErr);
+    }
+
+        // ✅ SEND MAIL TO PATIENT
+    try {
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: patient.email,
+        subject: "Appointment Confirmed 🏥",
+        html: `
+          <h2>Your Appointment is Confirmed</h2>
+          <p><b>Doctor Name:</b> ${doctor.fullName}</p>
+          <p><b>Date:</b> ${appointmentDate}</p>
+          <p><b>Time Slot:</b> ${timeSlot}</p>
+          <p>Please arrive 10 minutes early.</p>
+        `,
+      });
+    } catch (mailErr) {
+      console.error("Patient mail error:", mailErr);
+    }
 
     // Populate patient and doctor details
     const populatedAppointment = await Appointment.findById(appointment._id)

@@ -32,7 +32,7 @@
 // app.listen("8080", () => {
 //   console.log("Server Running");
 // });
-
+require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
