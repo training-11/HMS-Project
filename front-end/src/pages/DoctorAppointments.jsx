@@ -19,6 +19,7 @@ export default function DoctorAppointments() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [nurses, setNurses] = useState([]);
 
   useEffect(() => {
     try {
@@ -35,6 +36,17 @@ export default function DoctorAppointments() {
       navigate("/login", { replace: true });
     }
   }, [navigate]);
+
+useEffect(() => {
+  const fetchNurses = async () => {
+    const res = await fetch(`${API}/getNurse`);
+    const data = await res.json();
+
+    setNurses(data.filter(n => n.isVerified)); 
+  };
+
+  fetchNurses();
+}, []);
 
   useEffect(() => {
     if (!doctor?._id) {
@@ -68,6 +80,27 @@ export default function DoctorAppointments() {
     () => appointments.filter((appointment) => appointment.status === "scheduled"),
     [appointments]
   );
+
+  const assignNurse = async (appointmentId, nurseId) => {
+  const res = await fetch(`${API}/appointments/${appointmentId}/assign-nurse`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nurseId }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.message);
+    return;
+  }
+
+  setAppointments((prev) =>
+    prev.map((a) =>
+      a._id === appointmentId ? data.appointment : a
+    )
+  );
+};
 
   return (
     <>
@@ -271,24 +304,25 @@ export default function DoctorAppointments() {
                   <th>Time Slot</th>
                   <th>Status</th>
                   <th>Notes</th>
+                  <th>Nurse</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={6}>
+                    <td colSpan={7}>
                       <div className="state-box">Loading scheduled appointments...</div>
                     </td>
                   </tr>
                 ) : error ? (
                   <tr>
-                    <td colSpan={6}>
+                    <td colSpan={7}>
                       <div className="state-box">{error}</div>
                     </td>
                   </tr>
                 ) : scheduledAppointments.length === 0 ? (
                   <tr>
-                    <td colSpan={6}>
+                    <td colSpan={7}>
                       <div className="state-box">No scheduled appointments assigned yet.</div>
                     </td>
                   </tr>
@@ -313,6 +347,28 @@ export default function DoctorAppointments() {
                         <span className="badge">Scheduled</span>
                       </td>
                       <td>{appointment.notes?.trim() || "No notes added"}</td>
+                      {/* <td>{appointment.notes?.trim() || "No notes added"}</td> */}
+
+                      <td>
+                        <select
+                          value={appointment.nurse?._id || ""}
+                          onChange={(e) => assignNurse(appointment._id, e.target.value)}
+                          style={{
+                            padding: "5px",
+                            borderRadius: "6px",
+                            background: "#0f172a",
+                            color: "#fff",
+                            border: "1px solid #334155",
+                          }}
+                        >
+                          <option value="">Select Nurse</option>
+                          {nurses.map((nurse) => (
+                            <option key={nurse._id} value={nurse._id}>
+                              {nurse.fullName}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
                     </tr>
                   ))
                 )}

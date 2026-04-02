@@ -2,6 +2,7 @@ const Appointment = require("../models/Appointment");
 const Doctor = require("../models/Doctor");
 const Patient = require("../models/Patient");
 const nodemailer = require("nodemailer");
+const Nurse = require("../models/Nurse");
 
 console.log("EMAIL_USER:", process.env.EMAIL_USER);
 console.log("EMAIL_PASS:", process.env.EMAIL_PASS);
@@ -176,6 +177,7 @@ exports.getAppointments = async (req, res) => {
   try {
     const appointments = await Appointment.find()
       .populate("patient", "fullName email phone bloodGroup")
+      .populate("nurse", "fullName email")
       .populate("doctor", "fullName email specialty department")
       .sort({ appointmentDate: 1, timeSlot: 1 });
 
@@ -193,6 +195,7 @@ exports.getAppointmentsByDoctor = async (req, res) => {
 
     const appointments = await Appointment.find({ doctor: doctorId })
       .populate("patient", "fullName email phone bloodGroup")
+      .populate("nurse", "fullName email")
       .populate("doctor", "fullName email specialty department")
       .sort({ appointmentDate: 1, timeSlot: 1 });
 
@@ -210,6 +213,7 @@ exports.getAppointmentsByPatient = async (req, res) => {
 
     const appointments = await Appointment.find({ patient: patientId })
       .populate("patient", "fullName email phone bloodGroup")
+      .populate("nurse", "fullName email")
       .populate("doctor", "fullName email specialty department")
       .sort({ appointmentDate: 1, timeSlot: 1 });
 
@@ -295,6 +299,77 @@ exports.updateAppointmentStatus = async (req, res) => {
     });
   } catch (err) {
     console.error("Update appointment error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.assignNurse = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nurseId } = req.body;
+
+    if (!nurseId) {
+      return res.status(400).json({ message: "Nurse ID is required" });
+    }
+
+    const appointment = await Appointment.findById(id);
+
+    if (!appointment) {
+      return res.status(404).json({ message: "Appointment not found" });
+    }
+
+    const dayRange = getDayRange(appointment.appointmentDate);
+
+    // 🔥 CHECK: same nurse, same date, same time
+    const conflict = await Appointment.findOne({
+      _id: { $ne: id }, // exclude current appointment
+      nurse: nurseId,
+      appointmentDate: { $gte: dayRange.start, $lte: dayRange.end },
+      timeSlot: appointment.timeSlot,
+      status: { $in: ACTIVE_SLOT_STATUSES },
+    });
+
+    if (conflict) {
+      return res.status(409).json({
+        message: "This nurse is already assigned for this time slot",
+      });
+    }
+
+    appointment.nurse = nurseId;
+    await appointment.save();
+    const nurse = await Nurse.findById(nurseId);
+const patient = await Patient.findById(appointment.patient);
+const doctor = await Doctor.findById(appointment.doctor);
+
+try {
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: nurse.email,
+    subject: "New Patient Assigned 🏥",
+    html: `
+      <h2>You have been assigned a patient</h2>
+      <p><b>Patient Name:</b> ${patient.fullName}</p>
+      <p><b>Date:</b> ${appointment.appointmentDate.toDateString()}</p>
+      <p><b>Time Slot:</b> ${appointment.timeSlot}</p>
+      <p><b>Assigned By Doctor:</b> ${doctor.fullName}</p>
+      <p>Please login to your dashboard.</p>
+    `,
+  });
+} catch (err) {
+  console.error("Nurse mail error:", err);
+}
+
+    const updated = await Appointment.findById(id)
+      .populate("patient", "fullName email phone")
+      .populate("doctor", "fullName")
+      .populate("nurse", "fullName email");
+
+    res.json({
+      message: "Nurse assigned successfully",
+      appointment: updated,
+    });
+  } catch (err) {
+    console.error("Assign nurse error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };

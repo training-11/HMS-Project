@@ -54,6 +54,7 @@ route.post("/login", authController.commonLogin);
 // Doctor
 route.post("/postDoc",  docController.uploadMiddleware, docController.postDoc);
 route.get("/getDoc",    docController.getDoctors);
+route.put("/appointments/:id/assign-nurse", appointmentController.assignNurse);
 
 // Nurse
 route.post("/postNurse", nurseController.uploadMiddleware, nurseController.postNurse);
