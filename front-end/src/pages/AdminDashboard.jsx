@@ -1258,10 +1258,19 @@ const handleReject = async (role, id) => {
       {/* ✅ PHOTO */}
       {selectedUser.photo && (
         <div style={{ textAlign: "center", marginBottom: "10px" }}>
+          {(() => {
+            const photoSrc =
+              typeof selectedUser.photo === "string"
+                ? `http://localhost:8080/uploads/photos/${encodeURIComponent(selectedUser.photo)}`
+                : selectedUser.photo?.path
+                ? `http://localhost:8080/${selectedUser.photo.path}`
+                : `http://localhost:8080/uploads/photos/${encodeURIComponent(
+                    selectedUser.photo?.filename || ""
+                  )}`;
+
+            return (
           <img
-            src={`http://localhost:8080/uploads/photos/${encodeURIComponent(
-              selectedUser.photo?.filename || selectedUser.photo
-            )}`}
+            src={photoSrc}
             alt="User"
             style={{
               width: "100px",
@@ -1271,6 +1280,8 @@ const handleReject = async (role, id) => {
               border: "2px solid #1976d2",
             }}
           />
+            );
+          })()}
         </div>
       )}
 
@@ -1293,18 +1304,28 @@ const handleReject = async (role, id) => {
           <b>Documents:</b>
 
           {selectedUser.documents.map((doc, index) => {
-            const fileName =
+            const documentHref =
+              typeof doc === "string"
+                ? `http://localhost:8080/uploads/documents/${encodeURIComponent(doc)}`
+                : doc?.path
+                ? `http://localhost:8080/${doc.path}`
+                : `http://localhost:8080/uploads/documents/${encodeURIComponent(
+                    doc?.filename || doc?.name || ""
+                  )}`;
+
+            const documentLabel =
               typeof doc === "string"
                 ? doc
-                : doc.filename || doc.name;
+                : doc?.originalName || doc?.filename || doc?.name || `Document ${index + 1}`;
 
             return (
               <div key={index} style={{ marginTop: "5px" }}>
                 <a
-                  href={`http://localhost:8080/uploads/documents/${encodeURIComponent(fileName)}`}
+                  href={documentHref}
                   target="_blank"
                   rel="noreferrer"
                   style={{ color: "#1976d2", textDecoration: "underline" }}
+                  title={documentLabel}
                 >
                   View Document {index + 1}
                 </a>

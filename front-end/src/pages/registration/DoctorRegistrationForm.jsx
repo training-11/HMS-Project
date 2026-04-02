@@ -2,6 +2,9 @@ import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../Components/Navbar";
 
+const PHONE_REGEX = /^\d{10}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const DoctorRegistrationForm = () => {
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
@@ -58,7 +61,11 @@ const DoctorRegistrationForm = () => {
   ];
 
   const handleChange = (e) => {
-    setSignupData({ ...signupData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    const nextValue =
+      name === "phone" ? value.replace(/\D/g, "").slice(0, 10) : value;
+
+    setSignupData({ ...signupData, [name]: nextValue });
     setError("");
   };
 
@@ -166,6 +173,17 @@ const DoctorRegistrationForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (!PHONE_REGEX.test(signupData.phone)) {
+      setError("Phone number must contain exactly 10 digits.");
+      return;
+    }
+
+    if (!EMAIL_REGEX.test(signupData.email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
     setShowConfirm(true);
   };
 
@@ -444,6 +462,7 @@ const DoctorRegistrationForm = () => {
                     placeholder="arunraj@hospital.com"
                     value={signupData.email}
                     onChange={handleChange}
+                    pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
                     required
                   />
                 </div>
@@ -453,9 +472,12 @@ const DoctorRegistrationForm = () => {
                     type="tel"
                     className="form-control"
                     name="phone"
-                    placeholder="+91 98765 43210"
+                    placeholder="9876543210"
                     value={signupData.phone}
                     onChange={handleChange}
+                    inputMode="numeric"
+                    maxLength={10}
+                    pattern="\d{10}"
                     required
                   />
                 </div>
