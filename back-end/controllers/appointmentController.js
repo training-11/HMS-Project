@@ -1,18 +1,7 @@
 const Appointment = require("../models/Appointment");
 const Doctor = require("../models/Doctor");
 const Patient = require("../models/Patient");
-const nodemailer = require("nodemailer");
-
-console.log("EMAIL_USER:", process.env.EMAIL_USER);
-console.log("EMAIL_PASS:", process.env.EMAIL_PASS);
-
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, 
-  },
-});
+const sendMail = require("../utils/sendMail");
 
 // Time slots available (9 AM to 5 PM, 1-hour slots)
 const TIME_SLOTS = [
@@ -44,7 +33,6 @@ const getDayRange = (dateInput) => {
   return { start, end, date };
 };
 
-// ✅ CREATE APPOINTMENT
 exports.createAppointment = async (req, res) => {
   try {
     const { patientId, doctorId, appointmentDate, timeSlot, notes } = req.body;
@@ -55,13 +43,11 @@ exports.createAppointment = async (req, res) => {
       });
     }
 
-    // Check if patient exists
     const patient = await Patient.findById(patientId);
     if (!patient) {
       return res.status(404).json({ message: "Patient not found" });
     }
 
-    // Check if doctor exists and is verified
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
       return res.status(404).json({ message: "Doctor not found" });
@@ -70,7 +56,6 @@ exports.createAppointment = async (req, res) => {
       return res.status(400).json({ message: "Doctor is not verified" });
     }
 
-    // Check if time slot is valid
     if (!TIME_SLOTS.includes(timeSlot)) {
       return res.status(400).json({ message: "Invalid time slot" });
     }
@@ -80,7 +65,6 @@ exports.createAppointment = async (req, res) => {
       return res.status(400).json({ message: "Invalid appointment date" });
     }
 
-    // Check if the selected doctor already has this slot booked on that day.
     const existingAppointment = await Appointment.findOne({
       doctor: doctorId,
       appointmentDate: { $gte: dayRange.start, $lte: dayRange.end },
@@ -94,7 +78,6 @@ exports.createAppointment = async (req, res) => {
       });
     }
 
-    // Prevent assigning the same patient to multiple doctors at the same time.
     const patientConflict = await Appointment.findOne({
       patient: patientId,
       appointmentDate: { $gte: dayRange.start, $lte: dayRange.end },
@@ -108,7 +91,6 @@ exports.createAppointment = async (req, res) => {
       });
     }
 
-    // Create appointment
     const appointment = new Appointment({
       patient: patientId,
       doctor: doctorId,
@@ -120,43 +102,44 @@ exports.createAppointment = async (req, res) => {
 
     await appointment.save();
 
-    // ✅ SEND MAIL TO DOCTOR
     try {
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: doctor.email,
-        subject: "New Patient Assigned 🏥",
-        html: `
-          <h2>New Appointment Assigned</h2>
-          <p><b>Patient Name:</b> ${patient.fullName}</p>
-          <p><b>Date:</b> ${appointmentDate}</p>
-          <p><b>Time Slot:</b> ${timeSlot}</p>
-          <p>Please login to your dashboard.</p>
-        `,
-      });
+      await sendMail(
+        doctor.email,
+        "New Patient Assigned 🏥",
+        `New Appointment Assigned\nPatient Name: ${patient.fullName}\nDate: ${appointmentDate}\nTime Slot: ${timeSlot}\nPlease login to your dashboard.`,
+        `
+          <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.6;">
+            <h2 style="margin: 0 0 16px; font-size: 28px; font-weight: 700;">New Appointment Assigned</h2>
+            <p style="margin: 0 0 10px; font-size: 18px;"><b>Patient Name:</b> ${patient.fullName}</p>
+            <p style="margin: 0 0 10px; font-size: 18px;"><b>Date:</b> ${appointmentDate}</p>
+            <p style="margin: 0 0 10px; font-size: 18px;"><b>Time Slot:</b> ${timeSlot}</p>
+            <p style="margin: 18px 0 0; font-size: 18px;">Please login to your dashboard.</p>
+          </div>
+        `
+      );
     } catch (mailErr) {
-      console.error("Mail send error:", mailErr);
+      console.error("Doctor appointment mail error:", mailErr);
     }
 
-        // ✅ SEND MAIL TO PATIENT
     try {
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: patient.email,
-        subject: "Appointment Confirmed 🏥",
-        html: `
-          <h2>Your Appointment is Confirmed</h2>
-          <p><b>Doctor Name:</b> ${doctor.fullName}</p>
-          <p><b>Date:</b> ${appointmentDate}</p>
-          <p><b>Time Slot:</b> ${timeSlot}</p>
-          <p>Please arrive 10 minutes early.</p>
-        `,
-      });
+      await sendMail(
+        patient.email,
+        "Appointment Confirmed 🏥",
+        `Your Appointment is Confirmed\nDoctor Name: ${doctor.fullName}\nDate: ${appointmentDate}\nTime Slot: ${timeSlot}\nPlease arrive 10 minutes early.`,
+        `
+          <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.6;">
+            <h2 style="margin: 0 0 16px; font-size: 28px; font-weight: 700;">Your Appointment is Confirmed</h2>
+            <p style="margin: 0 0 10px; font-size: 18px;"><b>Doctor Name:</b> ${doctor.fullName}</p>
+            <p style="margin: 0 0 10px; font-size: 18px;"><b>Date:</b> ${appointmentDate}</p>
+            <p style="margin: 0 0 10px; font-size: 18px;"><b>Time Slot:</b> ${timeSlot}</p>
+            <p style="margin: 18px 0 0; font-size: 18px;">Please arrive 10 minutes early.</p>
+          </div>
+        `
+      );
     } catch (mailErr) {
-      console.error("Patient mail error:", mailErr);
+      console.error("Patient appointment mail error:", mailErr);
     }
 
-    // Populate patient and doctor details
     const populatedAppointment = await Appointment.findById(appointment._id)
       .populate("patient", "fullName email phone bloodGroup")
       .populate("doctor", "fullName email specialty department");
@@ -171,7 +154,6 @@ exports.createAppointment = async (req, res) => {
   }
 };
 
-// ✅ GET ALL APPOINTMENTS
 exports.getAppointments = async (req, res) => {
   try {
     const appointments = await Appointment.find()
@@ -186,7 +168,6 @@ exports.getAppointments = async (req, res) => {
   }
 };
 
-// ✅ GET APPOINTMENTS BY DOCTOR
 exports.getAppointmentsByDoctor = async (req, res) => {
   try {
     const { doctorId } = req.params;
@@ -203,7 +184,6 @@ exports.getAppointmentsByDoctor = async (req, res) => {
   }
 };
 
-// ✅ GET APPOINTMENTS BY PATIENT
 exports.getAppointmentsByPatient = async (req, res) => {
   try {
     const { patientId } = req.params;
@@ -220,7 +200,6 @@ exports.getAppointmentsByPatient = async (req, res) => {
   }
 };
 
-// ✅ GET AVAILABLE TIME SLOTS FOR A DOCTOR ON A DATE
 exports.getAvailableSlots = async (req, res) => {
   try {
     const { doctorId, date } = req.query;
@@ -236,7 +215,6 @@ exports.getAvailableSlots = async (req, res) => {
       return res.status(400).json({ message: "Invalid date" });
     }
 
-    // Get all booked appointments for this doctor on this date
     const bookedAppointments = await Appointment.find({
       doctor: doctorId,
       appointmentDate: { $gte: dayRange.start, $lte: dayRange.end },
@@ -245,7 +223,6 @@ exports.getAvailableSlots = async (req, res) => {
 
     const bookedSlots = bookedAppointments.map((apt) => apt.timeSlot);
 
-    // Filter out booked slots
     const availableSlots = TIME_SLOTS.filter(
       (slot) => !bookedSlots.includes(slot)
     );
@@ -262,7 +239,6 @@ exports.getAvailableSlots = async (req, res) => {
   }
 };
 
-// ✅ UPDATE APPOINTMENT STATUS
 exports.updateAppointmentStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -299,7 +275,6 @@ exports.updateAppointmentStatus = async (req, res) => {
   }
 };
 
-// ✅ DELETE APPOINTMENT
 exports.deleteAppointment = async (req, res) => {
   try {
     const { id } = req.params;

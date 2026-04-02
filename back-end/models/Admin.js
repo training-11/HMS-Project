@@ -55,6 +55,8 @@ const adminSchema = new mongoose.Schema({
       data: Buffer,
       contentType: String,
       filename: String,
+      originalName: String,
+      path: String,
     },
   ],
 

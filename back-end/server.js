@@ -43,7 +43,24 @@ const app = express();
 
 mongoose
   .connect("mongodb://localhost:27017/HospitalData")
-  .then(() => console.log("MongoDB Connected"))
+  .then(async () => {
+    console.log("MongoDB Connected");
+
+    try {
+      const appointmentsCollection = mongoose.connection.collection("appointments");
+      const indexes = await appointmentsCollection.indexes();
+      const legacyIndex = indexes.find(
+        (index) => index.name === "doctorId_1_date_1_startTime_1"
+      );
+
+      if (legacyIndex) {
+        await appointmentsCollection.dropIndex("doctorId_1_date_1_startTime_1");
+        console.log("Dropped legacy appointments index: doctorId_1_date_1_startTime_1");
+      }
+    } catch (indexErr) {
+      console.error("Appointment index cleanup error:", indexErr.message);
+    }
+  })
   .catch((err) => console.log(err));
 
 //Check the MongoDB URI

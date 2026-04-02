@@ -2,6 +2,9 @@ import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../Components/Navbar";
 
+const PHONE_REGEX = /^\d{10}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function NurseRegistrationForm() {
   const navigate = useNavigate();
 
@@ -9,6 +12,7 @@ function NurseRegistrationForm() {
   const [documents, setDocuments] = useState([]);
   const [camOpen, setCamOpen] = useState(false);
   const [showLoginConfirm, setShowLoginConfirm] = useState(false);
+  const [error, setError] = useState("");
 
   const photoRef = useRef(null);
   const docsRef = useRef(null);
@@ -102,7 +106,18 @@ function NurseRegistrationForm() {
   };
   // ================= REGISTER =================
   const handleRegister = async () => {
+    if (!EMAIL_REGEX.test(formData.email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    if (!PHONE_REGEX.test(formData.phone)) {
+      setError("Phone number must contain exactly 10 digits.");
+      return;
+    }
+
     try {
+      setError("");
       const data = new FormData();
 
       data.append("fullName", formData.fullName);
@@ -128,14 +143,14 @@ function NurseRegistrationForm() {
       const result = await res.json();
 
       if (!res.ok) {
-        alert(result.message || "Registration failed");
+        setError(result.message || "Registration failed");
       } else {
         alert("Nurse registered successfully!");
         navigate("/login");
       }
     } catch (err) {
       console.error(err);
-      alert("Server error");
+      setError("Server error");
     }
   };
 
@@ -168,6 +183,7 @@ function NurseRegistrationForm() {
       <div style={styles.page}>
         <div style={styles.card}>
           <h2 style={styles.title}>Nurse Sign Up</h2>
+          {error && <div style={styles.errorBox}>{error}</div>}
 
           {/* PROFILE PHOTO */}
           <div style={styles.section}>
@@ -218,8 +234,10 @@ function NurseRegistrationForm() {
 
             <label style={styles.label}>Email</label>
             <input
+              type="email"
               style={styles.input}
               placeholder="Enter Email"
+              value={formData.email}
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
@@ -227,10 +245,17 @@ function NurseRegistrationForm() {
 
             <label style={styles.label}>Phone</label>
             <input
+              type="tel"
               style={styles.input}
               placeholder="Enter 10 digit Phone Number"
+              value={formData.phone}
+              inputMode="numeric"
+              maxLength={10}
               onChange={(e) =>
-                setFormData({ ...formData, phone: e.target.value })
+                setFormData({
+                  ...formData,
+                  phone: e.target.value.replace(/\D/g, "").slice(0, 10),
+                })
               }
             />
 
@@ -408,6 +433,15 @@ const styles = {
 
   section: {
     marginBottom: 20,
+  },
+  errorBox: {
+    background: "#ffebee",
+    border: "1px solid #ef9a9a",
+    color: "#c62828",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 16,
+    fontSize: 14,
   },
 
   sectionTitle: {

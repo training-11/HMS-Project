@@ -4,6 +4,9 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
+const PHONE_REGEX = /^\d{10}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 // ── Absolute paths ─────────────────────────────────────────
 const UPLOAD_ROOT = path.resolve(__dirname, "..", "uploads");
 const PHOTO_DIR = path.resolve(UPLOAD_ROOT, "photos");
@@ -65,6 +68,14 @@ exports.postNurse = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
+    if (!EMAIL_REGEX.test(email.trim())) {
+      return res.status(400).json({ message: "Please enter a valid email address" });
+    }
+
+    if (!PHONE_REGEX.test(String(phone).trim())) {
+      return res.status(400).json({ message: "Phone number must contain exactly 10 digits" });
+    }
+
     const normalizedEmail = email.toLowerCase().trim();
 
     const existing = await Nurse.findOne({ email: normalizedEmail });
@@ -97,7 +108,8 @@ exports.postNurse = async (req, res) => {
         : null,
 
       documents: docFiles.map((f) => ({
-        filename: f.originalname,
+        filename: f.filename,
+        originalName: f.originalname,
         path: `uploads/documents/${f.filename}`,
       })),
     });

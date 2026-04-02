@@ -40,6 +40,8 @@ const nurseSchema = new mongoose.Schema({
       data: Buffer,
       contentType: String,
       filename: String,
+      originalName: String,
+      path: String,
     },
   ],
   isVerified: {
